@@ -17,31 +17,31 @@
     "AFF2": "Department, Institution, City, Country",
   ),
   abstract: [
-    *Background:* Exchanging datasets is crucial for biodiversity researchers.
-    Existing standard-based formats such as Darwin Core Archive (DwCA) for
-    example, significantly simplify the exchange. However, until a receiver of
-    the dataset imports it into a database the dataset cannot be used. The data
-    usually contains multiple files in CSV, JSON, or XML formats compressed
-    into one file and to query the data is very impractical. Moreover,
-    the creation of dataset is often not trivial and error-prone. The resulting
-    inconsistencies and errors on the client side create additional frictions
-    and innacuracies during import.
+    *Background:* Sharing biodiversity datasets across projects and
+    organisations depends on common exchange formats e.g., Darwin Core
+    Archive (DwCA) or the Catalogue of Life Data Package (ColDP). These
+    formats bundle multiple CSV, JSON, or XML files into a single compressed
+    archive. While widely adopted, this approach has a fundamental limitation:
+    the data is effectively inert until a recipient imports it into a database.
+    Generatation of a dataset's archive is error-prone and introduced
+    inconsistencies might create significant problems on the receiving end.
+    Also, there is no standard mechanism to detect what has changed between
+    two successive releases of the same dataset.
 
-    *New information:* We suggest a different approach to data exchange using
-    SFBorg project as an example. SFBorg project provides a frictionless,
-    "active" data exchange format that is not only easily queryable, but even
-    can be used as a backend for an ecosystem of applications and tools for
-    data manipulation and Visualization. SFBorg consists of a SQLite-based
-    data schema, Species File Group Archive (SFGA), and a growing collection
-    of software (universal formats converter `sf`, importer for non-standard
-    datasets `harvester`, GNverifier database importer `gndb`). The functionlity
-    of these tools in large part is located in a shared librarey `sflib` which
-    removes duplication of code and simplifies creation new tools and
-    maintenance of esiting ones. All the code OpenSource and is available
-    on GitHub. Species File Group uses SFBorg to make interproject data exchange
-    easier and to provide critial functionality for a variety of projects.
-    We consider this experiment a success, and consider SQLite to be an
-    amazing platform for archival and exchange of biodiversity data.
+    *New information:* We introduce SFBorg, a SQLite-based ecosystem for
+    biodiversity datasets exchange centred on the Species File Group Archive
+    (SFGA) schema. An SFGA single file is itself a fully queryable SQLite database,
+    allowing recipients to explore and filter data immediately using standard
+    SQL tools — no import step required. The ecosystem includes: `sf`, a
+    universal converter between DwCA, ColDP, and other formats, which also
+    computes semantic diffs between two SFGA archives to identify added,
+    modified, or removed taxa, names, and synonyms; `harvester`, for ingesting
+    non-standard or legacy sources; and `gndb`, which loads SFGA archives
+    directly into the GNverifier PostgreSQL database. Shared functionality is
+    centralised in the `sflib` library, reducing duplication and lowering the
+    cost of adding new tools. SFBorg is currently in production use across
+    Species File Group projects. All code is open source and available on
+    GitHub under the MIT licence.
   ],
   keywords: (
     "biodiversity informatics",
