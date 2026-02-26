@@ -30,11 +30,11 @@
 
     *New information:* We introduce SFBorg, a SQLite-based ecosystem for
     biodiversity datasets exchange centred on the Species File Group Archive
-    (SFGA) schema. An SFGA single file is itself a fully queryable SQLite database,
-    allowing recipients to explore and filter data immediately using standard
+    (SFGA) schema. An SFGA single file is a self-contained SQLite database,
+    allowing recipients to query and modify data immediately using standard
     SQL tools — no import step required. The ecosystem includes: `sf`, a
     universal converter between DwCA, ColDP, and other formats, which also
-    computes semantic diffs between two SFGA archives to identify added,
+    computes data diffs between two SFGA archives to identify added,
     modified, or removed taxa, names, and synonyms; `harvester`, for ingesting
     non-standard or legacy sources; and `gndb`, which loads SFGA archives
     directly into the GNverifier PostgreSQL database. Shared functionality is
