@@ -8,14 +8,13 @@
       email: "mozzheri@illinois.edu",
     ),
     "Geoffrey Ower": author-meta(
-      "AFF2",
-      email: "gdower@illinois.edu",
+      "AFF1",
     ),
   ),
   affiliations: (
-    "AFF1": "Department, Institution, City, Country",
-    "AFF2": "Department, Institution, City, Country",
+    "AFF1": "University of Illinois, Champaign, USA",
   ),
+
   abstract: [
     *Background:* Sharing biodiversity datasets across projects and
     organisations depends on common exchange formats e.g., Darwin Core
@@ -52,14 +51,18 @@
     "data conversion",
   ),
 )
+#set cite(style: "template/bmcart.cls")
+#show link: underline
+
 
 
 = Introduction
 
+/*
 Explain the landscape of biodiversity checklist data and why a common archive format
 is needed. Cover:
 
-- The diversity of existing checklist formats (DwC-A, CoL Data Package, custom TSVs,
+- The diversity of existing checklist formats (DwCA, CoL Data Package, custom TSVs,
   legacy Species File databases, etc.) and their limitations for interchange
 - The lack of tooling to detect and communicate *changes* between dataset versions
 - Why SQLite is a suitable foundation for a portable, self-contained archive format
@@ -68,7 +71,67 @@ is needed. Cover:
 - Brief overview of how the rest of the paper is structured
 
 Cite relevant prior work: Darwin Core, Catalogue of Life, TaxonWorks, related tools.
+*/
 
+Biodiversity projects often deal with thousands, millions, sometimes billions
+records of data. Datasets formed from these data usually need to be send to
+other researches, organisations (e.g., GBIF @gbif, ITIS @itis), checklist
+aggregators (e.g., the Catalogue of Life @col, Global Names @globalnames-web),
+nomenclatural authorities (IPNI @ipni, ZooBank @zoobank).
+
+Standards developed under auspicies of TDWG @tdwg simplify the data exchange
+significantly. DwCA is a workhorse for providing GBIF with checklist and
+occurrences data, openly published DwCA archives allow anybody ingest these
+datasets for a variety of purposes. CoLDP standard @coldp developed by GBIF
+allows taxonomists to send t their work on systematics to the Catalogue of
+Life helping to build a comprehensive list of all known species on Earth.
+
+Inspite of all the advantages current standards provide they are not without
+problems. Usually a shared dataset is a compressed file containing a collection
+of other files in XML, JSON, and a flavor of CSV formats. Such archives are
+'inert' and do not allow to work with their data until they are ingested into a
+database. Quite often archives created for exchange contain inconsistencies and
+mistakes. The archive provider has to be very careful to make sure that names
+of all fields are correct, that each row has the right number of items, that
+delimeter characters in CSV files are correctly escaped, that all data uses
+utf8 encodiing etc. In case of inconsistencies and errows the recievers of the
+archive have to deal with all the existing problems in the data, or, quite
+often the imported data does not reflect original data correctly. When data of
+a resource sent several times there is no easy way to find out what did change
+in updated versions. In this paper we introduce a different approach to the
+data exchange where a standard is represented as an SQLite database and we
+think this approach has several major improvements over tranditional data
+packages.
+
+Normally, sending data as a database binary files or a SQL text dump is a risky
+approach. Databases and the structure of their data often are evolve and are
+constantly influx, which makes them a poor candidate for a standard. However,
+SQLite database is an exception. The binary and SQL representations of SQLite
+database did stabilize more than 20 years ago and are expected to stay backward
+compatible at least until the year 2050. The database or SQL backup of the
+database are just one file, and it is very convenient for sharing these files.
+The specifications and format of SQLite is so stable, that the Library of
+United States Congress considers SQLite to be an archival standard together
+with XML and JSON files. SQLite is a very performant locally accessible
+database, that scales to terabytes of data, and there for is able to deal with
+vast majority of biodiversity datasets. There are so many applications that use
+SQLite on computers or telephones, that it is installed practically on such
+devices. All popular programming languages have a well-supported librfary to
+interact with SQLite. The data shared as a SQLite file is immediately 'active'
+i.e. it can be explored and modified right in the package. Moreover such
+standard-based stable archives allow creation of a wide variety of sofware
+applications that use the archive directly as a database backend. Because such
+database must be utf8 encoded, there is an automatic guard against populating
+of the data in a wrong encoding. The standard's SQL schema serves as a
+starting point of an archive and it just needs to be populated using already
+existing fields and control vocabularies, significantly reducing risk or
+inconsistencies and errors.
+
+Species File Group of Illinois Natural History Survey at University of Illinois
+participates in three major informatics projects: TaxonWorks, a taxonomic workbench,
+the Catalogue of Life aiming to create a comprehensive checklist of all known
+species, and Global Names Architecture with a goal to create a global index of
+all scientific names.jj
 
 = Project Description
 
@@ -252,5 +315,7 @@ acquisition, Investigation, Methodology, Project administration, Resources, Soft
 Supervision, Validation, Visualization, Writing – original draft, Writing – review
 & editing)_
 
+= Bibliorgraphy
 
-#bibliography("./ref.bib")
+#bibliography("./sfborg.bib")
+
