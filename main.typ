@@ -41,6 +41,7 @@
     cost of adding new tools. SFBorg is currently in production use across
     Species File Group projects. All code is open source and available on
     GitHub under the MIT licence.
+    #v(1em)
   ],
   keywords: (
     "biodiversity informatics",
@@ -51,27 +52,12 @@
     "data conversion",
   ),
 )
-#set cite(style: "template/bmcart.cls")
+//#set cite(style: "pensoft")
 #show link: underline
 
 
 
 = Introduction
-
-/*
-Explain the landscape of biodiversity checklist data and why a common archive format
-is needed. Cover:
-
-- The diversity of existing checklist formats (DwCA, CoL Data Package, custom TSVs,
-  legacy Species File databases, etc.) and their limitations for interchange
-- The lack of tooling to detect and communicate *changes* between dataset versions
-- Why SQLite is a suitable foundation for a portable, self-contained archive format
-- The goals of the SFBorg project: a stable format spec, a shared library, and a
-  suite of interoperable tools
-- Brief overview of how the rest of the paper is structured
-
-Cite relevant prior work: Darwin Core, Catalogue of Life, TaxonWorks, related tools.
-*/
 
 Biodiversity projects often deal with thousands, millions, sometimes billions
 records of data. Datasets formed from these data usually need to be send to
@@ -127,11 +113,33 @@ starting point of an archive and it just needs to be populated using already
 existing fields and control vocabularies, significantly reducing risk or
 inconsistencies and errors.
 
-Species File Group of Illinois Natural History Survey at University of Illinois
-participates in three major informatics projects: TaxonWorks, a taxonomic workbench,
-the Catalogue of Life aiming to create a comprehensive checklist of all known
-species, and Global Names Architecture with a goal to create a global index of
-all scientific names.jj
+Species File Group (SFG) of Illinois Natural History Survey at University of Illinois
+Participates in three major informatics projects: TaxonWorks @taxonworks, a
+taxonomic workbench, the Catalogue of Life @col a builder of a
+comprehensive checklist of all known species, and Global Names Architecture
+@globalnames-web a collection of tools for scientific names.
+
+We started SFBorg project to 'assimilate' datasets from a variety of sources
+and to make it easier for SFG projects to exchange data. Instead of commonly
+used formats like XML, JSON or CSV, SFBorg uses SQLite database schema to
+describe its standard. This creates several advantages, such as exploration
+and modification of datasets via SQL, as well as using them in a growing
+ecosystem of applications that use it as their database.
+
+/*
+Explain the landscape of biodiversity checklist data and why a common archive format
+is needed. Cover:
+
+- The diversity of existing checklist formats (DwCA, CoL Data Package, custom TSVs,
+  legacy Species File databases, etc.) and their limitations for interchange
+- The lack of tooling to detect and communicate *changes* between dataset versions
+- Why SQLite is a suitable foundation for a portable, self-contained archive format
+- The goals of the SFBorg project: a stable format spec, a shared library, and a
+  suite of interoperable tools
+- Brief overview of how the rest of the paper is structured
+
+Cite relevant prior work: Darwin Core, Catalogue of Life, TaxonWorks, related tools.
+*/
 
 = Project Description
 
@@ -315,7 +323,5 @@ acquisition, Investigation, Methodology, Project administration, Resources, Soft
 Supervision, Validation, Visualization, Writing – original draft, Writing – review
 & editing)_
 
-= Bibliorgraphy
-
-#bibliography("./sfborg.bib")
+#bibliography("./sfborg.bib", style: "ieee.csl")
 
