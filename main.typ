@@ -1,132 +1,115 @@
 #import "template/lib.typ": article, author-meta
 
-#show: article.with(
-  title: "SFBorg: a frictionless biodiversity data exchange.",
-  authors: (
-    "Dmitry Mozzherin": author-meta(
-      "AFF1",
-      email: "mozzheri@illinois.edu",
-    ),
-    "Geoffrey Ower": author-meta(
-      "AFF1",
-    ),
-  ),
-  affiliations: (
-    "AFF1": "University of Illinois, Champaign, USA",
-  ),
+#show: article.with( title: "SFBorg: a frictionless biodiversity data
+  exchange.", authors: ( "Dmitry Mozzherin": author-meta( "AFF1", email:
+    "mozzheri@illinois.edu",), "Geoffrey Ower": author-meta( "AFF1",),),
+  affiliations: ( "AFF1": "University of Illinois, Champaign, USA",),
 
-  abstract: [
-    *Background:* Sharing biodiversity datasets across projects and
-    organisations depends on common exchange formats e.g., Darwin Core
-    Archive (DwCA) or the Catalogue of Life Data Package (ColDP). These
-    formats bundle multiple CSV, JSON, or XML files into a single compressed
-    archive. While widely adopted, this approach has a fundamental limitation:
-    the data is effectively inert until a recipient imports it into a database.
-    Generatation of a dataset's archive is error-prone and introduced
-    inconsistencies might create significant problems on the receiving end.
-    Also, there is no standard mechanism to detect what has changed between
-    two successive releases of the same dataset.
+  abstract: [ *Background:* Sharing biodiversity datasets across projects and
+  organisations depends on common exchange formats e.g., Darwin Core Archive
+  (DwCA) or the Catalogue of Life Data Package (ColDP). These formats bundle
+  multiple CSV, JSON, or XML files into a single compressed archive. While
+  widely adopted, this approach has a fundamental limitation: the data is
+  effectively inert until a recipient imports it into a database. Generatation
+  of a dataset's archive is error-prone and introduced inconsistencies might
+  create significant problems on the receiving end. Also, there is no standard
+  mechanism to detect what has changed between two successive releases of the
+  same dataset.
 
-    *New information:* We introduce SFBorg, a SQLite-based ecosystem for
-    biodiversity datasets exchange centred on the Species File Group Archive
-    (SFGA) schema. An SFGA single file is a self-contained SQLite database,
-    allowing recipients to query and modify data immediately using standard
-    SQL tools — no import step required. The ecosystem includes: `sf`, a
-    universal converter between DwCA, ColDP, and other formats, which also
-    computes data diffs between two SFGA archives to identify added,
-    modified, or removed taxa, names, and synonyms; `harvester`, for ingesting
-    non-standard or legacy sources; and `gndb`, which loads SFGA archives
-    directly into the GNverifier PostgreSQL database. Shared functionality is
-    centralised in the `sflib` library, reducing duplication and lowering the
-    cost of adding new tools. SFBorg is currently in production use across
-    Species File Group projects. All code is open source and available on
-    GitHub under the MIT licence.
-    #v(1em)
-  ],
-  keywords: (
-    "biodiversity informatics",
-    "checklist",
-    "SQLite",
-    "data format",
-    "taxonomic data",
-    "data conversion",
-  ),
-)
-//#set cite(style: "pensoft")
-#show link: underline
+  *New information:* We introduce SFBorg, a SQLite-based ecosystem for
+  biodiversity datasets exchange centred on the Species File Group Archive
+  (SFGA) schema. An SFGA single file is a self-contained SQLite database,
+  allowing recipients to query and modify data immediately using standard SQL
+  tools — no import step required. The ecosystem includes: `sf`, a universal
+  converter between DwCA, ColDP, and other formats, which also computes data
+  diffs between two SFGA archives to identify added, modified, or removed taxa,
+  names, and synonyms; `harvester`, for ingesting non-standard or legacy
+  sources; and `gndb`, which loads SFGA archives directly into the GNverifier
+  PostgreSQL database. Shared functionality is centralised in the `sflib`
+  library, reducing duplication and lowering the cost of adding new tools.
+  SFBorg is currently in production use across Species File Group projects. All
+  code is open source and available on GitHub under the MIT licence. #v(1em) ],
+  keywords: ( "biodiversity informatics", "checklist", "SQLite", "data format",
+  "taxonomic data", "data conversion",),)
+//#set cite(style: "pensoft") #show link: underline
 
 
 
 = Introduction
 
-Biodiversity projects often deal with thousands, millions, sometimes billions
-records of data. Datasets formed from these data usually need to be send to
-other researches, organisations (e.g., GBIF @gbif, ITIS @itis), checklist
-aggregators (e.g., the Catalogue of Life @col, Global Names @globalnames-web),
-nomenclatural authorities (IPNI @ipni, ZooBank @zoobank).
+Biodiversity projects routinely manage thousands, millions, or even billions of
+records. The resulting datasets are commonly shared with researchers, organisations
+such as the Global Biodiversity Information Facility (GBIF) @gbif and the
+Integrated Taxonomic Information System (ITIS) @itis, checklist aggregators
+such as the Catalogue of Life (CoL) @col and Global Names @globalnames-web,
+and nomenclatural authorities such as the International Plant Names Index
+(IPNI) @ipni and ZooBank @zoobank.
 
-Standards developed under auspicies of TDWG @tdwg simplify the data exchange
-significantly. DwCA is a workhorse for providing GBIF with checklist and
-occurrences data, openly published DwCA archives allow anybody ingest these
-datasets for a variety of purposes. CoLDP standard @coldp developed by GBIF
-allows taxonomists to send t their work on systematics to the Catalogue of
-Life helping to build a comprehensive list of all known species on Earth.
+Standards developed under the auspices of Biodiversity Information Standards
+(TDWG) @tdwg greatly simplify data exchange. Darwin Core Archive (DwCA) is the
+workhorse format for supplying GBIF with checklist and occurrence data; openly
+published DwCA archives allow anyone to ingest these datasets for a wide
+variety of purposes. The Catalogue of Life Data Package (CoLDP) standard
+@coldp, developed jointly by CoL and GBIF, enables taxonomists to contribute
+their systematics work to CoL, helping to build a comprehensive list of all
+known species on Earth.
 
-Inspite of all the advantages current standards provide they are not without
-problems. Usually a shared dataset is a compressed file containing a collection
-of other files in XML, JSON, and a flavor of CSV formats. Such archives are
-'inert' and do not allow to work with their data until they are ingested into a
-database. Quite often archives created for exchange contain inconsistencies and
-mistakes. The archive provider has to be very careful to make sure that names
-of all fields are correct, that each row has the right number of items, that
-delimeter characters in CSV files are correctly escaped, that all data uses
-utf8 encodiing etc. In case of inconsistencies and errows the recievers of the
-archive have to deal with all the existing problems in the data, or, quite
-often the imported data does not reflect original data correctly. When data of
-a resource sent several times there is no easy way to find out what did change
-in updated versions. In this paper we introduce a different approach to the
-data exchange where a standard is represented as an SQLite database and we
-think this approach has several major improvements over tranditional data
-packages.
+Despite the advantages these standards offer, they are not without limitations.
+A shared dataset is typically a compressed archive containing a collection of
+XML, JSON, and CSV files. Such archives are effectively 'inert': their contents
+cannot be queried or modified until they are imported into a database. The
+creation of exchange archives is also error-prone. Providers must ensure that
+all field names are correct, that every row contains the right number of items,
+that delimiter characters in CSV files are properly escaped, and that all data
+uses UTF-8 encoding. Importing a dataset involves several parsing steps, any of
+which may fail or produce incorrect results when the archive contains
+inconsistencies. Such errors must then be resolved by the recipient, and the
+imported data may not faithfully represent the original. Furthermore, when a
+dataset is released multiple times there is no standard mechanism to identify
+what has changed between successive versions.
 
-Normally, sending data as a database binary files or a SQL text dump is a risky
-approach. Databases and the structure of their data often are evolve and are
-constantly influx, which makes them a poor candidate for a standard. However,
-SQLite database is an exception. The binary and SQL representations of SQLite
-database did stabilize more than 20 years ago and are expected to stay backward
-compatible at least until the year 2050. The database or SQL backup of the
-database are just one file, and it is very convenient for sharing these files.
-The specifications and format of SQLite is so stable, that the Library of
-United States Congress considers SQLite to be an archival standard together
-with XML and JSON files. SQLite is a very performant locally accessible
-database, that scales to terabytes of data, and there for is able to deal with
-vast majority of biodiversity datasets. There are so many applications that use
-SQLite on computers or telephones, that it is installed practically on such
-devices. All popular programming languages have a well-supported librfary to
-interact with SQLite. The data shared as a SQLite file is immediately 'active'
-i.e. it can be explored and modified right in the package. Moreover such
-standard-based stable archives allow creation of a wide variety of sofware
-applications that use the archive directly as a database backend. Because such
-database must be utf8 encoded, there is an automatic guard against populating
-of the data in a wrong encoding. The standard's SQL schema serves as a
-starting point of an archive and it just needs to be populated using already
-existing fields and control vocabularies, significantly reducing risk or
-inconsistencies and errors.
+In this paper we propose a different approach: representing an exchange
+standard as a SQLite database. SQLite is an exception to the general rule that
+database files make poor archival targets. The SQLite binary format and
+its SQL representation have been stable for more than twenty years and are
+committed to remaining backward-compatible until at least the year 2050.
+Because a database and its SQL backup each consist of a single file, sharing is
+straightforward. The format is so well regarded that the United States Library
+of Congress designates SQLite as an archival standard @SQLite3LOC, alongside
+XML and JSON. SQLite is a high-performance, locally accessible database that
+scales to terabytes, covering the vast majority of biodiversity datasets in
+practice. It is supported by well-maintained libraries in every major
+programming language, and it is pre-installed on virtually all modern computers
+and mobile devices. A dataset delivered as a SQLite file is immediately
+'active': recipients can query and modify it directly, without any import step.
+A stable, schema-defined archive also enables a wide variety of applications to
+use it directly as their database backend, and applications written in
+different programming languages can interoperate through their respective
+SQLite bindings. Because the schema defines all fields and controlled
+vocabularies in advance, the risk of structural inconsistencies is
+substantially reduced.
 
-Species File Group (SFG) of Illinois Natural History Survey at University of Illinois
-Participates in three major informatics projects: TaxonWorks @taxonworks, a
-taxonomic workbench, the Catalogue of Life @col a builder of a
-comprehensive checklist of all known species, and Global Names Architecture
-@globalnames-web a collection of tools for scientific names.
+Species File Group (SFG) of the Illinois Natural History Survey at the
+University of Illinois participates in three major biodiversity informatics
+projects: TaxonWorks @taxonworks, a taxonomic workbench; the Catalogue of Life
+@col, a builder of a comprehensive checklist of all known species; and Global
+Names Architecture @globalnames-web, a suite of tools for scientific names.
 
-We started SFBorg project to 'assimilate' datasets from a variety of sources
-and to make it easier for SFG projects to exchange data. Instead of commonly
-used formats like XML, JSON or CSV, SFBorg uses SQLite database schema to
-describe its standard. This creates several advantages, such as exploration
-and modification of datasets via SQL, as well as using them in a growing
-ecosystem of applications that use it as their database.
+We developed the SFBorg project to consolidate datasets from diverse sources
+and to streamline data exchange among SFG projects. Rather than the
+conventional XML, JSON, or CSV formats, SFBorg defines its exchange standard
+as an SQLite schema. This design allows datasets to be explored and modified
+via SQL without any prior import step, and supports a growing ecosystem of
+applications that use SFGA archives directly as their database backend. The
+SFBorg project comprises the SFGA SQLite schema, the `sflib` shared library
+that encapsulates the functionality required to convert archives to and from
+SFGA, and several applications that use an SFGA file as their primary database.
+
+In this paper we describe the SFBorg project and its components: the SFGA
+schema and its suite of SFGA-powered applications.
 
 /*
+We keep TODO comments until final version
 Explain the landscape of biodiversity checklist data and why a common archive format
 is needed. Cover:
 
@@ -143,14 +126,67 @@ Cite relevant prior work: Darwin Core, Catalogue of Life, TaxonWorks, related to
 
 = Project Description
 
-Describe the SFBorg project as a whole, for a non-technical biodiversity audience:
+At the heart of SFBorg is the Species File Group Archive (SFGA): a single,
+self-contained SQLite database file that serves simultaneously as the exchange
+unit and as a live, queryable database. Unlike conventional archive formats
+that bundle static CSV, JSON, or XML files, an SFGA file is immediately
+accessible via any SQL client or SQLite-aware library — the dataset and its
+query interface travel together. This design positions SFGA as a practical
+answer to the limitations of inert archive formats: recipients can inspect,
+filter, and transform a dataset the moment they receive it, without any
+import pipeline.
 
-- The core idea: SFGA as a portable, versioned, self-contained unit of checklist data
-- Who the target users are (checklist curators, aggregators, data pipelines)
-- What workflows the ecosystem enables: ingesting heterogeneous sources → normalising
-  to SFGA → diffing versions → loading into downstream databases
-- Institutional context: Species File Group, connection to gnverifier / GN projects
-- Current status and funding (if applicable)
+The ecosystem around SFGA currently consists of four applications. The `sf` tool is the
+central converter: it reads biodiversity data from DwCA, CoLDP, CSV files where
+fields are names according to DwCA or CoLDP terms, or simply a list of scientific
+names, normalises them into SFGA, and can re-export
+SFGA files as all these formats. `sf` also computes
+semantic diffs between two SFGA versions, identifying added, modified, and
+removed taxa, names, and synonyms. The `harvester` tool handles sources that
+cannot be processed generically by `sf` — non-standard or legacy datasets that
+require bespoke parsing and normalisation logic. The `gndb` tool loads an SFGA
+archive directly into the PostgreSQL database schema used by GNverifier,
+completing the pipeline at the downstream end. All four tools are built on
+`sflib`, a shared Go library that encapsulates core SFGA functionality and
+prevents duplication of conversion, diff, and normalisation logic across the
+ecosystem. The overall data flow is: _ingest_ (sf / harvester) → _normalise_
+to SFGA → _diff_ (sf) → _export or load_ (sf / gndb).
+
+SFBorg is in active production use, though the SFGA schema is still maturing
+and may undergo significant revision as limitations are encountered. The
+Catalogue of Life uses `sf` to generate CoLDP archives from SFGA files for
+their incorporation into CoL global checklist. Global Names relies on `gndb` as its sole
+mechanism for updating the taxonomic data in its GNverifier PostgreSQL
+database. A third production workflow is under active development: `sf` is
+being extended to convert flat taxonomic classifications — datasets that list
+taxa without explicit identifiers or parent–child relationships — into a
+proper Parent/Child hierarchy with generated identifiers. This
+capability is intended to support the migration of taxonomist-curated datasets
+into TaxonWorks, lowering the barrier for working taxonomists to contribute
+their data to a managed workbench.
+
+SFBorg was created by the Species File Group (SFG) at the Illinois Natural
+History Survey, University of Illinois at Urbana-Champaign, to serve the
+data-exchange needs of its three main projects: TaxonWorks, Catalogue of
+Life, and Global Names. All components of the ecosystem are released under the
+MIT licence and hosted on GitHub; contributions from the broader community are
+welcome.
+
+Looking ahead, the SFBorg team sees SFGA not merely as a pipeline format but
+as a stable platform for a broader class of tools — analogous to the role that
+stable document formats play in enabling diverse editors, viewers, and
+collaboration workflows. A normalised, SQL-queryable schema for biodiversity
+data could support a universal taxonomic editor, where any SFGA-aware
+application can open any checklist file without server setup; a web-based
+viewer that makes a taxonomist's life work publicly accessible the moment data
+are converted; diff-based peer review, where reviewers annotate semantic
+changes between two SFGA versions much as tracked changes work in a word
+processor; offline field tools that carry a working checklist on a tablet and
+synchronise changes back via the existing diff mechanism; direct data
+publication as citable packages on repositories such as Zenodo or Dryad; and
+AI-assisted workflows, where the SQL interface allows natural-language queries
+over a checklist without custom integration. These directions are under active
+discussion within the Species File Group.
 
 
 = Web Location (URIs)
