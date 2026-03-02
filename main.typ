@@ -108,22 +108,6 @@ SFGA, and several applications that use an SFGA file as their primary database.
 In this paper we describe the SFBorg project and its components: the SFGA
 schema and its suite of SFGA-powered applications.
 
-/*
-We keep TODO comments until final version
-Explain the landscape of biodiversity checklist data and why a common archive format
-is needed. Cover:
-
-- The diversity of existing checklist formats (DwCA, CoL Data Package, custom TSVs,
-  legacy Species File databases, etc.) and their limitations for interchange
-- The lack of tooling to detect and communicate *changes* between dataset versions
-- Why SQLite is a suitable foundation for a portable, self-contained archive format
-- The goals of the SFBorg project: a stable format spec, a shared library, and a
-  suite of interoperable tools
-- Brief overview of how the rest of the paper is structured
-
-Cite relevant prior work: Darwin Core, Catalogue of Life, TaxonWorks, related tools.
-*/
-
 = Project Description
 
 At the heart of SFBorg is the Species File Group Archive (SFGA): a single,
@@ -136,41 +120,41 @@ answer to the limitations of inert archive formats: recipients can inspect,
 filter, and transform a dataset the moment they receive it, without any
 import pipeline.
 
-The ecosystem around SFGA currently consists of four applications. The `sf` tool is the
-central converter: it reads biodiversity data from DwCA, CoLDP, CSV files where
-fields are names according to DwCA or CoLDP terms, or simply a list of scientific
-names, normalises them into SFGA, and can re-export
-SFGA files as all these formats. `sf` also computes
-semantic diffs between two SFGA versions, identifying added, modified, and
-removed taxa, names, and synonyms. The `harvester` tool handles sources that
-cannot be processed generically by `sf` — non-standard or legacy datasets that
-require bespoke parsing and normalisation logic. The `gndb` tool loads an SFGA
-archive directly into the PostgreSQL database schema used by GNverifier,
-completing the pipeline at the downstream end. All four tools are built on
-`sflib`, a shared Go library that encapsulates core SFGA functionality and
-prevents duplication of conversion, diff, and normalisation logic across the
-ecosystem. The overall data flow is: _ingest_ (sf / harvester) → _normalise_
-to SFGA → _diff_ (sf) → _export or load_ (sf / gndb).
+The ecosystem around SFGA currently consists of four applications. The `sf`
+tool is a universal converter: it reads biodiversity data from DwCA, CoLDP, CSV
+files where fields are names according to DwCA or CoLDP terms, or simply from
+lists of scientific names, normalises them into SFGA, and can re-export SFGA
+files as all these formats. `sf` also computes semantic diffs between two SFGA
+versions of data, identifying added, modified, and removed taxa, names, and
+synonyms. The `harvester` tool handles sources that cannot be processed
+generically by `sf` — non-standard or legacy datasets that require bespoke
+parsing and normalisation logic. The `gndb` tool loads an SFGA archive directly
+into the PostgreSQL database schema used by GNverifier, completing the pipeline
+at the downstream end. All four tools are built on `sflib`, a shared Go library
+that encapsulates core SFGA functionality and prevents duplication of
+conversion, diff, and normalisation logic across the ecosystem. The overall
+data flow is: _ingest_ (sf / harvester) → _normalise_ to SFGA → _diff_ (sf) →
+_export or load_ (sf / gndb).
 
 SFBorg is in active production use, though the SFGA schema is still maturing
-and may undergo significant revision as limitations are encountered. The
-Catalogue of Life uses `sf` to generate CoLDP archives from SFGA files for
-their incorporation into CoL global checklist. Global Names relies on `gndb` as its sole
-mechanism for updating the taxonomic data in its GNverifier PostgreSQL
-database. A third production workflow is under active development: `sf` is
-being extended to convert flat taxonomic classifications — datasets that list
-taxa without explicit identifiers or parent–child relationships — into a
-proper Parent/Child hierarchy with generated identifiers. This
+and may undergo significant revision if limitations are encountered. The
+Catalogue of Life uses `sf` and `harvester` to generate CoLDP archives for
+their incorporation into the CoL global checklist. Global Names relies on
+`gndb` as its sole mechanism for updating the taxonomic data in its GNverifier
+PostgreSQL database. A third production workflow is under active development:
+`sf` is being extended to convert flat taxonomic classifications — datasets
+that list taxa without explicit identifiers or parent–child relationships —
+into a proper Parent/Child hierarchy with generated identifiers. This
 capability is intended to support the migration of taxonomist-curated datasets
 into TaxonWorks, lowering the barrier for working taxonomists to contribute
 their data to a managed workbench.
 
 SFBorg was created by the Species File Group (SFG) at the Illinois Natural
 History Survey, University of Illinois at Urbana-Champaign, to serve the
-data-exchange needs of its three main projects: TaxonWorks, Catalogue of
-Life, and Global Names. All components of the ecosystem are released under the
-MIT licence and hosted on GitHub; contributions from the broader community are
-welcome.
+data-exchange needs of its three main projects: TaxonWorks, Catalogue of Life,
+and Global Names. All components of the ecosystem are released under the MIT
+licence and hosted on GitHub; contributions from the broader
+community are welcome.
 
 Looking ahead, the SFBorg team sees SFGA not merely as a pipeline format but
 as a stable platform for a broader class of tools — analogous to the role that
@@ -191,65 +175,55 @@ discussion within the Species File Group.
 
 = Web Location (URIs)
 
-#table(
-  columns: (auto, 1fr),
-  stroke: 0.5pt,
-  [*Project homepage*],    [https://github.com/sfborg — or a dedicated site if available],
-  [*SFGA format spec*],    [URL to format specification / schema documentation],
-  [*SF (converter)*],      [https://github.com/sfborg/sf],
-  [*harvester*],           [https://github.com/sfborg/harvester],
-  [*gndb*],                [https://github.com/sfborg/gndb],
-  [*sflib*],               [https://github.com/sfborg/sflib],
-  [*Bug tracker*],         [https://github.com/sfborg — issues on each respective repo],
-  [*Documentation*],       [URL to docs site or README links],
-)
+#figure(
+  placement: none,
+  caption: [Web locations of SFBorg components.],
+  table(
+    columns: (auto, 1fr),
+    stroke: 0.5pt,
+    [*SFBorg*],               [https://github.com/sfborg],
+    [*SFGA schema*],          [https://github.com/sfborg/sfga],
+    [*SFlib*],                [https://github.com/sfborg/sflib],
+    [*SF (converter)*],       [https://github.com/sfborg/sf],
+    [*Harvester*],            [https://github.com/sfborg/harvester],
+    [*GNdb*],                 [https://github.com/sfborg/gndb],
+  )
+) <web-locations>
 
 
 = Technical Specification
 
-#table(
-  columns: (auto, 1fr),
-  stroke: 0.5pt,
-  [*Programming language*], [Go (version X.Y)],
-  [*Archive format*],       [SQLite 3],
-  [*Interface*],            [Command-line interface (all tools); Go library (sflib)],
-  [*Standards*],            [Darwin Core, Catalogue of Life Data Package, GBIF],
-  [*Operating system*],     [Linux, macOS, Windows (cross-platform via Go)],
-  [*Licence*],              [MIT License (or state the actual licence)],
-  [*SFGA spec version*],    [e.g. v1.0],
-  [*SF version*],           [e.g. v0.x.y],
-  [*harvester version*],    [e.g. v0.x.y],
-  [*gndb version*],         [e.g. v0.x.y],
-  [*sflib version*],        [e.g. v0.x.y],
-)
-
+#figure(
+  placement: none,
+  caption: [SFBorg project specifications],
+  table(
+    columns: (auto, 1fr),
+    stroke: 0.5pt,
+    [*Programming language*], [Go (version TBA)],
+    [*Archive format*],       [SQLite 3],
+    [*Interface*],            [Command-line interface (all tools); Go library (sflib)],
+    [*Standards*],            [Darwin Core, Catalogue of Life Data Package],
+    [*Operating system*],     [Linux, macOS, Windows (cross-platform via Go)],
+    [*Licence*],              [MIT License],
+    [*SFGA schema version*],  [TBA],
+    [*SF version*],           [TBA],
+    [*harvester version*],    [TBA],
+    [*gndb version*],         [TBA],
+    [*sflib version*],        [TBA],
+  )
+) <specifications>
 
 = Repository
 
-Source code for all components is openly available:
-
-#table(
-  columns: (auto, 1fr, auto),
-  stroke: 0.5pt,
-  [*Component*], [*Repository*], [*Archived DOI*],
-  [SFGA spec], [https://github.com/sfborg/sfga], [https://doi.org/10.5281/zenodo.XXXXXXX],
-  [sflib],     [https://github.com/sfborg/sflib], [https://doi.org/10.5281/zenodo.XXXXXXX],
-  [SF],        [https://github.com/sfborg/sf],    [https://doi.org/10.5281/zenodo.XXXXXXX],
-  [harvester], [https://github.com/sfborg/harvester], [https://doi.org/10.5281/zenodo.XXXXXXX],
-  [gndb],      [https://github.com/sfborg/gndb],  [https://doi.org/10.5281/zenodo.XXXXXXX],
-)
-
+Source code for all components is openly available as shown in @web-locations.
 Versioned releases are archived to Zenodo to ensure long-term availability and
-citability. Each repository contains a `go.mod` file listing Go module dependencies.
-
+citability. Each repository contains a `go.mod` file listing Go module
+dependencies.
 
 = Usage Licence
 
-All components of the SFBorg ecosystem are released under the MIT License. The full
-license text is available in the `LICENSE` file in each repository. Any bundled
-reference data or example datasets should state their license separately (e.g.
-CC BY 4.0 if derived from Catalogue of Life or GBIF).
-
+All components of the SFBorg ecosystem are released under the MIT License. The
+full license text is available in the `LICENSE` file in each repository. 
 
 = Implementation
 
@@ -266,7 +240,7 @@ Describe the SFGA (Species File Group Archive) SQLite schema:
 
 Include an entity-relationship diagram or a simplified schema table if helpful.
 
-== sflib
+== SFlib
 
 Describe the shared Go library that underpins all tools:
 
