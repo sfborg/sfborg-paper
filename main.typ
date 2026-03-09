@@ -227,18 +227,50 @@ full license text is available in the `LICENSE` file in each repository.
 
 = Implementation
 
+The SFBorg implementation consists of two layers: the SFGA SQLite schema,
+which defines the exchange format, and a suite of applications — `SFlib`,
+`SF`, `Harvester`, and `GNdb` — that produce, consume, and transform SFGA
+archives.
+
 == SFGA Format
 
-Describe the SFGA (Species File Group Archive) SQLite schema:
+The Species File Group Archive (SFGA) defines a SQLite schema for
+biodiversity taxonomic and nomenclatural data. The schema by itself is
+already functional albeit empty SQLite database. Our goal was to make the
+schema compatible with CoLDP, DwCA, and stand-alone Darwin Core terms used
+in 'flat' CSV file. We decided to use CoLDP as a starting point, as it is
+the closest to a relational database sandard. The schema is already augmented
+with significant number of fields created to accomodate needs of Species
+File Group and will continue to evolve by breaking backward compatibility
+if necessary, until we feel it reaches stable v1.0.0 stage.
 
-- Top-level design decisions: why SQLite, why a single-file archive
-- Key tables and their relationships (taxa, names, references, distributions,
-  vernacular names, metadata, etc.)
-- Versioning and provenance fields built into the schema
-- How SFGA compares to DwC-A or CoL Data Package structurally
-- The format specification repository and any schema migration tooling
+The schema is published as a SQLite dump file and its tables currently
+follow CoLDP design closely. The following tables exist in v0.4.2
 
-Include an entity-relationship diagram or a simplified schema table if helpful.
+// TODO: LIST OF tables without enums
+
+Tables' collumns start by namespace following with the semantic meaning
+of the column.
+
+// TODO: Table that describes the namespaces. TW, SF and GN doe not exist yet
+// lets assume these terms go to 'https://terms.sfg.org'.
+
+Controlled vocabularies are implemented as tables with hardcoded values and
+currently mostly follow controlled vocabularies of CoLDP.
+
+// TODO: add an example of controlled vocabulary. 
+
+// TODO: explain semantic versioning, and what current version v0.4.2 implies.
+
+The purpose of the schema is to provide accurate and looseless migration of data between
+three out main projects: TaxonWorks, the CoL, and GN. TaxonWorks is the most
+challenging, because it is based on rich ontologies.
+
+The schema continues to evolve rapidly according to current day to day tasks
+and is already used in production in applications described further.
+
+// TODO: emphasize benefits of the schema compare to traditional formats?
+
 
 == SFlib
 
