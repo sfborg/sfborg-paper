@@ -234,97 +234,472 @@ archives.
 
 == SFGA Format
 
-The Species File Group Archive (SFGA) defines a SQLite schema for
-biodiversity taxonomic and nomenclatural data. The schema by itself is
-already functional albeit empty SQLite database. Our goal was to make the
-schema compatible with CoLDP, DwCA, and stand-alone Darwin Core terms used
-in 'flat' CSV file. We decided to use CoLDP as a starting point, as it is
-the closest to a relational database sandard. The schema is already augmented
-with significant number of fields created to accomodate needs of Species
-File Group and will continue to evolve by breaking backward compatibility
-if necessary, until we feel it reaches stable v1.0.0 stage.
 
-The schema is published as a SQLite dump file and its tables currently
-follow CoLDP design closely. The following tables exist in v0.4.2
+In contrast with traditional checklists that require transfer to a database to
+be useful, an SFGA file _is_ the database — recipients can open it in any SQL
+client, run queries, and modify records the moment they receive it, with no
+import step and no risk of parsing errors.
 
-// TODO: LIST OF tables without enums
+=== Schema design
 
-Tables' collumns start by namespace following with the semantic meaning
-of the column.
+SFGA is a SQLite schema for biodiversity taxonomic and nomenclatural data,
+published as `schema.sql`, a plain-text SQL dump @mozzherin_ower_2026_sfga. We
+chose CoLDP as the starting point because its entity model is the closest
+existing standard to a normalised relational design. Every CoLDP field is
+present in SFGA and carries the same semantics, so a round-trip conversion
+between the two formats is lossless for CoLDP-conformant data. The schema
+extends CoLDP with fields required for lossless migration among the two SFG
+projects: the Catalogue of Life, and Global Names.TaxonWorks, which models taxa
+through rich ontologies, will require additional changes to the schema.
 
-// TODO: Table that describes the namespaces. TW, SF and GN doe not exist yet
-// lets assume these terms go to 'https://terms.sfg.org'.
+SFGA follows semantic versioning. The current release is v0.4.2. The leading
+zero signals that the schema is still maturing: any minor-version increment
+(e.g. v0.4 → v0.5) may introduce breaking changes. Once the schema has
+stabilised across all production workflows it will be released as v1.0.0,
+after which backward compatibility will be maintained.
 
-Controlled vocabularies are implemented as tables with hardcoded values and
-currently mostly follow controlled vocabularies of CoLDP.
+=== Data tables
 
-// TODO: add an example of controlled vocabulary. 
+Version v0.4.2 contains the following data tables (controlled-vocabulary
+tables are listed separately below):
 
-// TODO: explain semantic versioning, and what current version v0.4.2 implies.
+#figure(
+  placement: none,
+  caption: [SFGA data tables in v0.4.2.],
+  table(
+    columns: (auto, 1fr),
+    stroke: 0.5pt,
+    [*Table*], [*Content*],
+    [`version`],             [Schema version of this archive],
+    [`metadata`],            [Dataset-level provenance and descriptive metadata],
+    [`contact`],             [Contact persons for the dataset],
+    [`creator`],             [Dataset creators (for citation)],
+    [`editor`],              [Dataset editors],
+    [`publisher`],           [Publishing organisation],
+    [`contributor`],         [Additional contributors],
+    [`source`],              [Source datasets referenced by this archive],
+    [`author`],              [Biographical records of nomenclatural authors],
+    [`reference`],           [Bibliographic references],
+    [`name`],                [Scientific names (parsed and unparsed fields)],
+    [`taxon`],               [Accepted taxa with full classification hierarchy],
+    [`synonym`],             [Synonyms linked to accepted taxa],
+    [`vernacular`],          [Vernacular (common) names],
+    [`name_relation`],       [Nomenclatural relationships between names],
+    [`type_material`],       [Type specimen records],
+    [`distribution`],        [Geographic distribution records],
+    [`media`],               [Images and other media linked to taxa],
+    [`treatment`],           [Taxon treatment documents],
+    [`species_estimate`],    [Estimated species counts per taxon],
+    [`taxon_property`],      [Arbitrary key–value properties for taxa],
+    [`species_interaction`], [Ecological interactions between taxa],
+    [`taxon_concept_relation`], [Set-theoretic relationships between taxon concepts],
+    [`name_match`],          [Pre-computed name-matching results],
+  )
+) <sfga-tables>
 
-The purpose of the schema is to provide accurate and looseless migration of data between
-three out main projects: TaxonWorks, the CoL, and GN. TaxonWorks is the most
-challenging, because it is based on rich ontologies.
+=== Column namespaces
 
-The schema continues to evolve rapidly according to current day to day tasks
-and is already used in production in applications described further.
+Every column name is prefixed with a namespace token that identifies the
+vocabulary it belongs to. This makes the origin of each field explicit and
+allows tools to process only the namespaces they understand while ignoring
+the rest. The four current namespaces are:
 
-// TODO: emphasize benefits of the schema compare to traditional formats?
+#figure(
+  placement: none,
+  caption: [Column namespace prefixes used in SFGA.],
+  table(
+    columns: (auto, auto, 1fr),
+    stroke: 0.5pt,
+    [*Prefix*], [*Vocabulary*], [*Notes*],
+    [`col__`], [Catalogue of Life Data Package], [Primary vocabulary; all CoLDP fields are present],
+    [`gn__`],  [Global Names],                   [Global Names-related fields],
+    [`sf__`],  [Species File],                   [Fields used by several SFG projects],
+    [`tw__`],  [TaxonWorks],                     [TaxonWorks-related fields],
+  )
+) <sfga-namespaces>
 
+Terms for the `gn__`, `sf__`, and `tw__` namespaces are defined at
+`https://terms.sfg.org` (under active development). `col__` terms follow the
+published CoLDP specification @coldp.
+
+=== Controlled vocabularies
+
+Controlled vocabularies are implemented as read-only tables with hardcoded
+values, following CoLDP conventions where applicable. For example, the
+`taxonomic_status` table defines the permitted values for the
+`col__status_id` column in the `taxon` and `synonym` tables according to
+CoLDP specification:
+
+#figure(
+  placement: none,
+  caption: [The `taxonomic_status` controlled vocabulary table (v0.4.2).],
+  table(
+    columns: (auto, 1fr),
+    stroke: 0.5pt,
+    [*Value*], [*Meaning*],
+    [`ACCEPTED`],               [The taxon is accepted under the relevant code],
+    [`PROVISIONALLY_ACCEPTED`], [Accepted pending further review],
+    [`SYNONYM`],                [A heterotypic or homotypic synonym],
+    [`AMBIGUOUS_SYNONYM`],      [A name that is a synonym of more than one accepted taxon],
+    [`MISAPPLIED`],             [A name used incorrectly in the literature for a different taxon],
+    [`BARE_NAME`],              [A name published without a formal description],
+  )
+) <sfga-taxstatus>
+
+Note that the terms are using botanical semantic, and would require signiicant
+improvement to provide better semantic resolution.
+
+Other vocabulary tables cover nomenclatural codes, ranks (150+ entries from
+domain to strain), nomenclatural status, type-specimen status, name
+relationships, species interactions (50+ ecological interaction types with
+OBO references), geological time periods (200+ entries), and geographic
+gazetteers.
 
 == SFlib
 
-Describe the shared Go library that underpins all tools:
+Without a shared library, every tool in the ecosystem would re-implement
+the same SFGA read/write logic, format parsers, and normalisation routines
+independently — `sflib` eliminates that duplication and ensures that a bug
+fix or schema change propagates to all tools at once.
 
-- What functionality sflib encapsulates (SFGA read/write, normalisation,
-  diff computation, name parsing integration, etc.)
-- Why centralising logic in a library was chosen over per-tool implementations
-- Public API surface (key interfaces/types exposed to tool authors)
-- How to use sflib as a dependency in a Go project
+=== Package structure
+
+`sflib` is a pure-Go library @mozzherin_ower_2026_sflib that
+requires no CGO and no system-level SQLite installation; all SQLite access
+goes through the `modernc.org/sqlite` pure-Go driver. It means that applicatons
+developed on the base of `sflib` are self-sufficient and do not require
+SQLite to be present. The library is
+organised around five format packages, each providing the same
+`arch.Packager` interface:
+
+#figure(
+  placement: none,
+  caption: [`sflib` format packages.],
+  table(
+    columns: (auto, auto, 1fr),
+    stroke: 0.5pt,
+    [*Package*],    [*Format*],          [*Description*],
+    [`pkg/sfga`],   [SFGA],              [Read and write SQLite-based SFGA archives],
+    [`pkg/coldp`],  [CoLDP],             [Read and write Catalogue of Life Data Package ZIP archives],
+    [`pkg/dwca`],   [DwCA],              [Read and write Darwin Core Archive ZIP files],
+    [`pkg/xsv`],    [CSV / TSV / PSV],   [Read and write delimited-value files with DwC or CoLDP column headers; delimiter auto-detected],
+    [`pkg/text`],   [Plain text],        [Read and write files with one scientific name per line (UTF-8)],
+  )
+) <sflib-packages>
+
+=== Public API
+
+All five format packages implement the `arch.Packager` interface:
+
+#raw(block: true, lang: "go",
+"type Packager interface {
+    Fetch(src, dst string) error   // retrieve source into a cache directory
+    Create(dir string) error       // create an empty archive in a cache directory
+    Export(out string, zip bool) error // write the cache to an output file
+}"
+)
+
+Instances are created via package-level factory functions in the root
+package:
+
+#raw(block: true, lang: "go",
+"sflib.NewText(opts...)   // plain text
+sflib.NewXsv(opts...)    // CSV / TSV / PSV
+sflib.NewColdp(opts...)  // CoLDP
+sflib.NewDwca(opts...)   // DwCA
+sflib.NewSfga(opts...)   // SFGA"
+)
+
+Key configuration options — passed to any factory — include `OptNomCode` (sets
+the nomenclatural code of a dataset: zoological, botanical, bacterial, …),
+`OptJobsNum` (sets the level of concurrency: default 5), `OptBatchSize`
+(defines number of records processed in a batch: default 50,000),
+`OptWithParents` (indicates an intention to create a parent/child hierarchy
+from flat classificatios), and `OptLocalSchemaPath` (tells to use a local
+`schema.sql` instead of fetching the latest one from GitHub).
+
+Record data flows between packages through the `coldp.NameUsage` and
+`coldp.Data` types defined in `pkg/coldp`, which serve as the canonical
+in-memory representation regardless of the source or target format.
+
+=== Usage
+
+`sflib` is consumed as a standard Go module dependency:
+
+#raw(block: true, lang: "sh",
+"go get github.com/sfborg/sflib"
+)
+
+The primary reference implementation of the library is `sf` (see below). 
 
 == SF — Universal Converter and Differ
 
-Describe the SF command-line tool:
+Biodiversity data comes in multiple formats, and converting between them
+is not a trivial task; `sf` automates the full round-trip — import any
+supported format, query or transform it as SFGA, then export to any other
+format — and also tells you exactly what changed between two versions of a
+dataset. In addition `sf` package allows to prepare outdated SFGA files by
+updating them to the latest available version.
 
-- *Conversion:* supported input formats (DwC-A, CoL DP, TSV, legacy Species File
-  databases, …) → SFGA output. How format detection works.
-- *Diff calculation:* how SF computes semantic differences between two SFGA
-  archives (added/modified/deleted taxa, names, synonyms, etc.)
-- *Output formats:* what SF can export to (SFGA, CoL DP, plain TSV, …)
-- Example invocations:
+=== Importing data into SFGA
+
+`sf from` converts a source file into a pair of SFGA outputs: a plain-text
+SQL dump (`.sql`) and a ready-to-use binary SQLite database (`.sqlite`).
+Supported input formats are Darwin Core Archive (DwCA), Catalogue of Life
+Data Package (CoLDP), delimiter-separated files with DwC or CoLDP headers
+(CSV, TSV, PSV), and plain-text name lists. The format is inferred from
+the file extension and internal structure; the output path prefix is
+provided by the user:
 
 #raw(block: true, lang: "sh",
-  "# Convert a Darwin Core Archive to SFGA\n" +
-  "sf convert input.zip -o output.sfga\n\n" +
-  "# Calculate diff between two versions\n" +
-  "sf diff v1.sfga v2.sfga -o changes.tsv"
+"sf from coldp dataset.zip  output/dataset   # CoLDP → SFGA
+sf from dwca  dataset.zip  output/dataset   # DwCA  → SFGA
+sf from xsv   dataset.csv  output/dataset   # CSV   → SFGA
+sf from text  names.txt    output/dataset   # names → SFGA"
 )
 
-== harvester
+Input can be a local file path or a remote URL; `sf` downloads and caches
+remote files automatically. To keep smaller footprint of created SFGA files
+there is also a flag to compress them by ZIP algorithm.
 
-Describe the harvester tool:
+=== Exporting from SFGA
 
-- What "non-standard" sources it targets (legacy formats, bespoke database dumps,
-  sources that cannot be handled by the generic SF converter)
-- How sources are defined or configured (config files, plugins, hardcoded adapters)
-- The import pipeline: fetch → parse → normalise → write SFGA
-- How to add support for a new source
+`sf to` re-exports an SFGA archive to any of the supported output formats:
+
+#raw(block: true, lang: "sh",
+"sf to coldp dataset.sqlite output    # SFGA → CoLDP
+sf to dwca  dataset.sqlite output    # SFGA → DwCA
+sf to xsv   dataset.sqlite output    # SFGA → CSV
+sf to text  dataset.sqlite names     # SFGA → plain text"
+)
+
+=== Comparing datasets
+
+`sf diff` computes a difference between two SFGA files and writes the
+result as a third SFGA archive whose tables record which taxa, names, and
+synonyms were added, modified, or removed. The comparison can optionally
+be scoped to a named taxon in each file:
+
+#raw(block: true, lang: "sh",
+"sf diff v1.sqlite v2.sqlite diff.sqlite
+sf diff v1.sqlite v2.sqlite diff.sqlite \\
+    --source-taxon Plantae --target-taxon Plantae"
+)
+
+=== Migrating schema versions
+
+`sf update` migrates an SFGA file produced by an older schema version to
+the current schema, preserving all data. An additional flag converts a
+flat classification — a list of taxa without explicit parent identifiers —
+into a proper parent/child hierarchy with generated identifiers:
+
+#raw(block: true, lang: "sh",
+"sf update old.sqlite output/updated
+sf update flat.sqlite output/tree --add-parents"
+)
+
+`sf` can be installed via Homebrew (`brew install sf`), by downloading a
+pre-built binary from the GitHub releases page, or with
+`go install github.com/sfborg/sf@latest`.
+
+=== Performance
+
+// TODO: an example of converting CoL's CoLDP to SFGA
+
+== Harvester
+
+Not every biodiversity dataset is published in a standard format; many
+sources distribute data as bespoke database dumps, proprietary spreadsheets,
+or web-scraped content that `sf` cannot handle generically. `Harvester`
+fills that gap with hand-written adapters for each such source.
+
+=== Supported sources
+
+Each source is implemented as a Go package under `internal/sources/` and
+registered with a short label. The sources currently included are:
+
+#figure(
+  placement: none,
+  caption: [Data sources supported by `harvester`.],
+  table(
+    columns: (auto, 1fr),
+    stroke: 0.5pt,
+    [*Label*],        [*Source*],
+    [`grin`],         [GRIN (Germplasm Resources Information Network) — plant genetic resources],
+    [`ioc`],          [IOC World Bird List — ornithological checklist],
+    [`itis`],         [ITIS (Integrated Taxonomic Information System)],
+    [`ncbi`],         [NCBI Taxonomy],
+    [`paleodb`],      [Paleobiology Database],
+    [`wikisp`],       [Wikispecies],
+    [`worldplants`],  [World Plants],
+  )
+) <harvester-sources>
+
+=== Source adapter interface
+
+Every adapter implements the `data.Convertor` interface and is registered
+via a `data.DataSet` descriptor that carries a short label, a human-readable
+name, usage notes, a download URL, and a `ManualSteps` flag for sources
+whose conversion cannot be fully automated (the `Notes` field must then
+document the manual steps). New sources are added by implementing the
+interface and registering the descriptor; no changes to the core pipeline
+are required.
+
+=== CLI usage
+
+`harvester list` prints all registered sources with their labels and IDs.
+`harvester get` fetches and converts a source by label or list position:
+
+#raw(block: true, lang: "sh",
+"harvester list                      # show registered sources
+harvester get itis                   # fetch and convert ITIS
+harvester get itis output/itis -z   # compress output as zip
+harvester get ioc  -f local.zip     # use a pre-downloaded file"
+)
+
+=== Performance
+
+// TODO: an example of converting a fairly large dataset like ITIS.
 
 == gndb
 
-Describe the gndb tool:
+GNverifier @mozzherin2024gnverifier is a high-throughput name-verification
+service that resolves scientific names against hundreds of biodiversity data
+sources. Running a local GNverifier instance requires loading those sources
+into a PostgreSQL database; `gndb` automates that loading step, taking SFGA
+archives as its sole input.
 
-- Its specific purpose: loading an SFGA archive into a PostgreSQL database schema
-  used by gnverifier
-- The target database schema (briefly) and how SFGA fields map to it
-- Typical invocation:
+=== Database lifecycle
+
+`gndb` manages the full lifecycle of the GNverifier PostgreSQL database
+through four subcommands:
 
 #raw(block: true, lang: "sh",
-  "gndb load dataset.sfga --db postgres://user:pass@localhost/gnverifier"
+"gndb create    # create the database schema
+gndb migrate   # apply schema migrations
+gndb populate  # load SFGA sources into the database
+gndb optimize  # build indexes for fast verification"
 )
 
-- How gndb fits into the broader gnverifier data pipeline
+=== Populating from SFGA sources
 
+Sources are declared in `~/.config/gndb/sources.yaml`. Each entry
+specifies a numeric ID, a parent directory or URL where the SFGA file
+lives, and optional metadata overrides. Source IDs below 1000 are reserved
+for official GN data sources; IDs 1000 and above are for custom local
+sources. `gndb populate` reads the YAML, downloads or opens each SFGA
+file, and imports data in five ordered phases: dataset metadata, name
+strings and canonical forms, vernacular names, taxonomic hierarchy, and
+finally name-string indices. All five phases use batched inserts for
+performance.
+
+#raw(block: true, lang: "sh",
+"gndb populate                    # load all sources in sources.yaml
+gndb populate --source-ids 1,11  # load specific sources only"
+)
+
+=== Fit within the broader pipeline
+
+`gndb` sits at the downstream end of the SFBorg pipeline: `sf` or
+`harvester` produce SFGA archives from external data, and `gndb` loads
+those archives into the GNverifier database. Once `gndb optimize` has
+built the indexes, the database is ready to serve verification requests.
+The separation means that the same SFGA file produced by `sf` can be
+examined interactively via SQL, archived to Zenodo, and loaded into
+GNverifier — all without reprocessing the original source data.
+
+=== Performance
+
+// TODO: an example of ingesting CoL data.
+
+== Conclusions
+
+The four components described above form a coherent system unified by a
+single design decision: SFGA, a SQLite database, serves simultaneously as
+the exchange unit, the live queryable dataset, and the stable contract
+between tools. Every claim made in the Introduction and Project Description
+rests on a specific technical consequence of that decision.
+
+The Introduction argued that conventional archive formats are effectively
+inert — useful only after an import pipeline has processed them. SFGA
+addresses this directly: because the archive _is_ a database, a recipient
+with any SQL client can query, filter, and modify the dataset the moment
+it arrives, with no intermediate step. The Introduction also noted that CSV
+and XML archives are error-prone to produce and import; SFGA removes most
+of those failure modes by replacing free-form text files with a schema that
+enforces field types, controlled vocabularies, and referential structure at
+write time.
+
+The Introduction further noted the absence of a standard diff mechanism.
+`sf diff` fills that gap at the semantic level: rather than a line-by-line
+text diff, it records which taxa, names, and synonyms were added, modified,
+or removed between two dataset versions, and writes the result as a
+queryable SFGA archive in its own right.
+
+The Project Description claimed that the ecosystem enables lossless
+round-trips between formats. That property follows from `sflib`'s
+architecture: all five format packages share the same `coldp.NameUsage`
+in-memory representation, so a DwCA → SFGA → CoLDP conversion does not
+pass through any lossy intermediate. The Project Description also described
+`sflib` as the mechanism that prevents logic duplication across tools; the
+single `arch.Packager` interface, with its `Fetch`, `Create`, and `Export`
+methods, means that a new format can be added to the ecosystem by
+implementing one interface, with no changes required to any existing tool.
+
+The Project Description described `harvester` as handling sources that
+cannot be processed generically. The adapter model confirms this: each
+source is an independent Go package implementing the `data.Convertor`
+interface, registered by label, with a `ManualSteps` flag for sources
+whose conversion cannot be fully automated. The core pipeline is untouched
+when a new source is added.
+
+*Schema evolution and backward compatibility.* The most significant
+trade-off of the SQLite approach compared with text-based formats is schema
+compatibility. A new Darwin Core term or CoLDP field is invisible to
+existing consumers — they simply encounter an extra column they do not
+recognise and continue working. A new column in the SFGA schema, by
+contrast, is a structural change: SQL queries that reference specific
+columns or rely on schema introspection may fail against a newer file.
+Before v1.0.0 this tension is managed by semantic versioning with explicit
+breaking-change declarations; every SFGA file carries a `version` table
+that records the schema version it was produced with, and `sf update`
+migrates any older file to the current schema automatically. After v1.0.0
+the schema commits to additive-only evolution: new columns and tables may
+be added, but nothing will be renamed or removed. Under that regime `sf
+update` provides the same automated forward migration, giving users
+long-term backward compatibility through a single command. Notably, neither
+DwCA nor CoLDP provide any equivalent migration mechanism; consumers of
+those formats are expected to handle schema drift silently or fail.
+
+Taken together, the SFBorg ecosystem demonstrates that representing a
+biodiversity exchange standard as a SQLite schema is not merely
+theoretically attractive but practically viable. The same file serves as
+an archive, a live database, a diff target, and a direct backend for
+production applications — roles that conventional text-bundle formats
+require separate tooling to fulfil, if they can fulfil them at all.
+
+*SFGA as a platform.* `gndb` represents a qualitative step beyond the
+other tools in the ecosystem: where `sf` and `harvester` treat SFGA as
+an exchange format to produce or consume, `gndb` uses it as the stable
+contract on which a production application is built. It does not parse
+SFGA and discard it; it reads SFGA directly into a live service, with the
+schema defining the interface between data producers and data consumers.
+This is only the beginning of what that role makes possible. Any team
+that needs a queryable, citable, diff-aware biodiversity checklist can
+adopt SFGA as their database backend without building format parsers or
+import pipelines. A universal taxonomic editor could open any SFGA file
+the way a word processor opens a document. A web-based viewer could make
+a taxonomist's life work publicly accessible the moment the data are
+converted. Diff-based peer review could let reviewers annotate semantic
+changes between two SFGA versions as naturally as tracked changes work in
+a manuscript. Offline field tools could carry a working checklist on a
+tablet and synchronise edits back through the existing diff mechanism.
+The SQL interface also makes SFGA-backed checklists immediately accessible
+to AI-assisted workflows without custom integration. Each of these
+directions is a straightforward extension of what the current ecosystem
+already does. The SFGA schema, once stable, is not merely an exchange
+format but a foundation — and the tools described in this paper are the
+first layer built on it.
 
 = Additional Information
 
@@ -338,6 +713,9 @@ Key shared dependencies across the ecosystem:
   CLI framework), with links and brief roles
 
 Tool-specific dependencies (e.g. gndb → PostgreSQL driver) should be noted per tool.
+It is worth noting that all described above applicatios are stand alone binaries
+compiled for CPUs and Operating Systems that cover wast majority of users.
+These files to not require any additional libraries to run.
 
 == Availability and Maintenance
 
