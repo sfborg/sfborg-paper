@@ -1,9 +1,13 @@
 #import "template/lib.typ": article, author-meta
 
-#show: article.with( title: "SFBorg: a frictionless biodiversity data
-  exchange.", authors: ( "Dmitry Mozzherin": author-meta( "AFF1", email:
-    "mozzheri@illinois.edu",), "Geoffrey Ower": author-meta( "AFF1",),),
-  affiliations: ( "AFF1": "University of Illinois, Champaign, USA",),
+#show: article.with(
+  title: "SFBorg: a frictionless biodiversity data
+  exchange.",
+  authors: (
+    "Dmitry Mozzherin": author-meta("AFF1", email: "mozzheri@illinois.edu"),
+    "Geoffrey Ower": author-meta("AFF1"),
+  ),
+  affiliations: ("AFF1": "University of Illinois, Champaign, USA"),
 
   abstract: [ *Background:* Sharing biodiversity datasets across projects and
   organisations depends on common exchange formats e.g., Darwin Core Archive
@@ -16,7 +20,7 @@
   mechanism to detect what has changed between two successive releases of the
   same dataset.
 
-  *New information:* We introduce SFBorg, a SQLite-based ecosystem for
+    *New information:* We introduce SFBorg, a SQLite-based ecosystem for
   biodiversity datasets exchange centred on the Species File Group Archive
   (SFGA) schema. An SFGA single file is a self-contained SQLite database,
   allowing recipients to query and modify data immediately using standard SQL
@@ -29,8 +33,15 @@
   library, reducing duplication and lowering the cost of adding new tools.
   SFBorg is currently in production use across Species File Group projects. All
   code is open source and available on GitHub under the MIT licence. #v(1em) ],
-  keywords: ( "biodiversity informatics", "checklist", "SQLite", "data format",
-  "taxonomic data", "data conversion",),)
+  keywords: (
+    "biodiversity informatics",
+    "checklist",
+    "SQLite",
+    "data format",
+    "taxonomic data",
+    "data conversion",
+  ),
+)
 //#set cite(style: "pensoft") #show link: underline
 
 
@@ -38,12 +49,12 @@
 = Introduction
 
 Biodiversity projects routinely manage thousands, millions, or even billions of
-records. The resulting datasets are commonly shared with researchers, organisations
-such as the Global Biodiversity Information Facility (GBIF) @gbif and the
-Integrated Taxonomic Information System (ITIS) @itis, checklist aggregators
-such as the Catalogue of Life (CoL) @col and Global Names @globalnames-web,
-and nomenclatural authorities such as the International Plant Names Index
-(IPNI) @ipni and ZooBank @zoobank.
+records. The resulting datasets are commonly shared with researchers,
+organisations such as the Global Biodiversity Information Facility (GBIF) @gbif
+and the Integrated Taxonomic Information System (ITIS) @itis, checklist
+aggregators such as the Catalogue of Life (CoL) @col and Global Names
+@globalnames-web, and nomenclatural authorities such as the International Plant
+Names Index (IPNI) @ipni and ZooBank @zoobank.
 
 Standards developed under the auspices of Biodiversity Information Standards
 (TDWG) @tdwg greatly simplify data exchange. Darwin Core Archive (DwCA) is the
@@ -181,13 +192,13 @@ discussion within the Species File Group.
   table(
     columns: (auto, 1fr),
     stroke: 0.5pt,
-    [*SFBorg*],               [https://github.com/sfborg],
-    [*SFGA schema*],          [https://github.com/sfborg/sfga],
-    [*SFlib*],                [https://github.com/sfborg/sflib],
-    [*SF (converter)*],       [https://github.com/sfborg/sf],
-    [*Harvester*],            [https://github.com/sfborg/harvester],
-    [*GNdb*],                 [https://github.com/sfborg/gndb],
-  )
+    [*SFBorg*], [https://github.com/sfborg],
+    [*SFGA schema*], [https://github.com/sfborg/sfga],
+    [*SFlib*], [https://github.com/sfborg/sflib],
+    [*SF (converter)*], [https://github.com/sfborg/sf],
+    [*Harvester*], [https://github.com/sfborg/harvester],
+    [*GNdb*], [https://github.com/sfborg/gndb],
+  ),
 ) <web-locations>
 
 
@@ -200,17 +211,17 @@ discussion within the Species File Group.
     columns: (auto, 1fr),
     stroke: 0.5pt,
     [*Programming language*], [Go (version TBA)],
-    [*Archive format*],       [SQLite 3],
-    [*Interface*],            [Command-line interface (all tools); Go library (sflib)],
-    [*Standards*],            [Darwin Core, Catalogue of Life Data Package],
-    [*Operating system*],     [Linux, macOS, Windows (cross-platform via Go)],
-    [*Licence*],              [MIT License],
-    [*SFGA schema version*],  [TBA],
-    [*SF version*],           [TBA],
-    [*harvester version*],    [TBA],
-    [*gndb version*],         [TBA],
-    [*sflib version*],        [TBA],
-  )
+    [*Archive format*], [SQLite 3],
+    [*Interface*], [Command-line interface (all tools); Go library (sflib)],
+    [*Standards*], [Darwin Core, Catalogue of Life Data Package],
+    [*Operating system*], [Linux, macOS, Windows (cross-platform via Go)],
+    [*Licence*], [MIT License],
+    [*SFGA schema version*], [TBA],
+    [*SF version*], [TBA],
+    [*harvester version*], [TBA],
+    [*gndb version*], [TBA],
+    [*sflib version*], [TBA],
+  ),
 ) <specifications>
 
 = Repository
@@ -223,7 +234,7 @@ dependencies.
 = Usage Licence
 
 All components of the SFBorg ecosystem are released under the MIT License. The
-full license text is available in the `LICENSE` file in each repository. 
+full license text is available in the `LICENSE` file in each repository.
 
 = Implementation
 
@@ -270,31 +281,33 @@ tables are listed separately below):
     columns: (auto, 1fr),
     stroke: 0.5pt,
     [*Table*], [*Content*],
-    [`version`],             [Schema version of this archive],
-    [`metadata`],            [Dataset-level provenance and descriptive metadata],
-    [`contact`],             [Contact persons for the dataset],
-    [`creator`],             [Dataset creators (for citation)],
-    [`editor`],              [Dataset editors],
-    [`publisher`],           [Publishing organisation],
-    [`contributor`],         [Additional contributors],
-    [`source`],              [Source datasets referenced by this archive],
-    [`author`],              [Biographical records of nomenclatural authors],
-    [`reference`],           [Bibliographic references],
-    [`name`],                [Scientific names (parsed and unparsed fields)],
-    [`taxon`],               [Accepted taxa with full classification hierarchy],
-    [`synonym`],             [Synonyms linked to accepted taxa],
-    [`vernacular`],          [Vernacular (common) names],
-    [`name_relation`],       [Nomenclatural relationships between names],
-    [`type_material`],       [Type specimen records],
-    [`distribution`],        [Geographic distribution records],
-    [`media`],               [Images and other media linked to taxa],
-    [`treatment`],           [Taxon treatment documents],
-    [`species_estimate`],    [Estimated species counts per taxon],
-    [`taxon_property`],      [Arbitrary key–value properties for taxa],
+    [`version`], [Schema version of this archive],
+    [`metadata`], [Dataset-level provenance and descriptive metadata],
+    [`contact`], [Contact persons for the dataset],
+    [`creator`], [Dataset creators (for citation)],
+    [`editor`], [Dataset editors],
+    [`publisher`], [Publishing organisation],
+    [`contributor`], [Additional contributors],
+    [`source`], [Source datasets referenced by this archive],
+    [`author`], [Biographical records of nomenclatural authors],
+    [`reference`], [Bibliographic references],
+    [`name`], [Scientific names (parsed and unparsed fields)],
+    [`taxon`], [Accepted taxa with full classification hierarchy],
+    [`synonym`], [Synonyms linked to accepted taxa],
+    [`vernacular`], [Vernacular (common) names],
+    [`name_relation`], [Nomenclatural relationships between names],
+    [`type_material`], [Type specimen records],
+    [`distribution`], [Geographic distribution records],
+    [`media`], [Images and other media linked to taxa],
+    [`treatment`], [Taxon treatment documents],
+    [`species_estimate`], [Estimated species counts per taxon],
+    [`taxon_property`], [Arbitrary key–value properties for taxa],
     [`species_interaction`], [Ecological interactions between taxa],
-    [`taxon_concept_relation`], [Set-theoretic relationships between taxon concepts],
-    [`name_match`],          [Pre-computed name-matching results],
-  )
+    [`taxon_concept_relation`],
+    [Set-theoretic relationships between taxon concepts],
+
+    [`name_match`], [Pre-computed name-matching results],
+  ),
 ) <sfga-tables>
 
 === Column namespaces
@@ -311,11 +324,14 @@ the rest. The four current namespaces are:
     columns: (auto, auto, 1fr),
     stroke: 0.5pt,
     [*Prefix*], [*Vocabulary*], [*Notes*],
-    [`col__`], [Catalogue of Life Data Package], [Primary vocabulary; all CoLDP fields are present],
-    [`gn__`],  [Global Names],                   [Global Names-related fields],
-    [`sf__`],  [Species File],                   [Fields used by several SFG projects],
-    [`tw__`],  [TaxonWorks],                     [TaxonWorks-related fields],
-  )
+    [`col__`],
+    [Catalogue of Life Data Package],
+    [Primary vocabulary; all CoLDP fields are present],
+
+    [`gn__`], [Global Names], [Global Names-related fields],
+    [`sf__`], [Species File], [Fields used by several SFG projects],
+    [`tw__`], [TaxonWorks], [TaxonWorks-related fields],
+  ),
 ) <sfga-namespaces>
 
 Terms for the `gn__`, `sf__`, and `tw__` namespaces are defined at
@@ -337,13 +353,17 @@ CoLDP specification:
     columns: (auto, 1fr),
     stroke: 0.5pt,
     [*Value*], [*Meaning*],
-    [`ACCEPTED`],               [The taxon is accepted under the relevant code],
+    [`ACCEPTED`], [The taxon is accepted under the relevant code],
     [`PROVISIONALLY_ACCEPTED`], [Accepted pending further review],
-    [`SYNONYM`],                [A heterotypic or homotypic synonym],
-    [`AMBIGUOUS_SYNONYM`],      [A name that is a synonym of more than one accepted taxon],
-    [`MISAPPLIED`],             [A name used incorrectly in the literature for a different taxon],
-    [`BARE_NAME`],              [A name published without a formal description],
-  )
+    [`SYNONYM`], [A heterotypic or homotypic synonym],
+    [`AMBIGUOUS_SYNONYM`],
+    [A name that is a synonym of more than one accepted taxon],
+
+    [`MISAPPLIED`],
+    [A name used incorrectly in the literature for a different taxon],
+
+    [`BARE_NAME`], [A name published without a formal description],
+  ),
 ) <sfga-taxstatus>
 
 Note that the terms are using botanical semantic, and would require signiicant
@@ -378,36 +398,48 @@ organised around five format packages, each providing the same
   table(
     columns: (auto, auto, 1fr),
     stroke: 0.5pt,
-    [*Package*],    [*Format*],          [*Description*],
-    [`pkg/sfga`],   [SFGA],              [Read and write SQLite-based SFGA archives],
-    [`pkg/coldp`],  [CoLDP],             [Read and write Catalogue of Life Data Package ZIP archives],
-    [`pkg/dwca`],   [DwCA],              [Read and write Darwin Core Archive ZIP files],
-    [`pkg/xsv`],    [CSV / TSV / PSV],   [Read and write delimited-value files with DwC or CoLDP column headers; delimiter auto-detected],
-    [`pkg/text`],   [Plain text],        [Read and write files with one scientific name per line (UTF-8)],
-  )
+    [*Package*], [*Format*], [*Description*],
+    [`pkg/sfga`], [SFGA], [Read and write SQLite-based SFGA archives],
+    [`pkg/coldp`],
+    [CoLDP],
+    [Read and write Catalogue of Life Data Package ZIP archives],
+
+    [`pkg/dwca`], [DwCA], [Read and write Darwin Core Archive ZIP files],
+    [`pkg/xsv`],
+    [CSV / TSV / PSV],
+    [Read and write delimited-value files with DwC or CoLDP column headers; delimiter auto-detected],
+
+    [`pkg/text`],
+    [Plain text],
+    [Read and write files with one scientific name per line (UTF-8)],
+  ),
 ) <sflib-packages>
 
 === Public API
 
 All five format packages implement the `arch.Packager` interface:
 
-#raw(block: true, lang: "go",
-"type Packager interface {
-    Fetch(src, dst string) error   // retrieve source into a cache directory
-    Create(dir string) error       // create an empty archive in a cache directory
+#raw(
+  block: true,
+  lang: "go",
+  "type Packager interface {
+    Fetch(src, dst string) error // retrieve source into a cache directory
+    Create(dir string) error // create an empty archive in a cache directory
     Export(out string, zip bool) error // write the cache to an output file
-}"
+}",
 )
 
 Instances are created via package-level factory functions in the root
 package:
 
-#raw(block: true, lang: "go",
-"sflib.NewText(opts...)   // plain text
+#raw(
+  block: true,
+  lang: "go",
+  "sflib.NewText(opts...)   // plain text
 sflib.NewXsv(opts...)    // CSV / TSV / PSV
 sflib.NewColdp(opts...)  // CoLDP
 sflib.NewDwca(opts...)   // DwCA
-sflib.NewSfga(opts...)   // SFGA"
+sflib.NewSfga(opts...)   // SFGA",
 )
 
 Key configuration options — passed to any factory — include `OptNomCode` (sets
@@ -426,11 +458,9 @@ in-memory representation regardless of the source or target format.
 
 `sflib` is consumed as a standard Go module dependency:
 
-#raw(block: true, lang: "sh",
-"go get github.com/sfborg/sflib"
-)
+#raw(block: true, lang: "sh", "go get github.com/sfborg/sflib")
 
-The primary reference implementation of the library is `sf` (see below). 
+The primary reference implementation of the library is `sf` (see below).
 
 == SF — Universal Converter and Differ
 
@@ -451,11 +481,13 @@ Data Package (CoLDP), delimiter-separated files with DwC or CoLDP headers
 the file extension and internal structure; the output path prefix is
 provided by the user:
 
-#raw(block: true, lang: "sh",
-"sf from coldp dataset.zip  output/dataset   # CoLDP → SFGA
+#raw(
+  block: true,
+  lang: "sh",
+  "sf from coldp dataset.zip  output/dataset   # CoLDP → SFGA
 sf from dwca  dataset.zip  output/dataset   # DwCA  → SFGA
 sf from xsv   dataset.csv  output/dataset   # CSV   → SFGA
-sf from text  names.txt    output/dataset   # names → SFGA"
+sf from text  names.txt    output/dataset   # names → SFGA",
 )
 
 Input can be a local file path or a remote URL; `sf` downloads and caches
@@ -466,11 +498,13 @@ there is also a flag to compress them by ZIP algorithm.
 
 `sf to` re-exports an SFGA archive to any of the supported output formats:
 
-#raw(block: true, lang: "sh",
-"sf to coldp dataset.sqlite output    # SFGA → CoLDP
+#raw(
+  block: true,
+  lang: "sh",
+  "sf to coldp dataset.sqlite output    # SFGA → CoLDP
 sf to dwca  dataset.sqlite output    # SFGA → DwCA
 sf to xsv   dataset.sqlite output    # SFGA → CSV
-sf to text  dataset.sqlite names     # SFGA → plain text"
+sf to text  dataset.sqlite names     # SFGA → plain text",
 )
 
 === Comparing datasets
@@ -480,10 +514,12 @@ result as a third SFGA archive whose tables record which taxa, names, and
 synonyms were added, modified, or removed. The comparison can optionally
 be scoped to a named taxon in each file:
 
-#raw(block: true, lang: "sh",
-"sf diff v1.sqlite v2.sqlite diff.sqlite
+#raw(
+  block: true,
+  lang: "sh",
+  "sf diff v1.sqlite v2.sqlite diff.sqlite
 sf diff v1.sqlite v2.sqlite diff.sqlite \\
-    --source-taxon Plantae --target-taxon Plantae"
+    --source-taxon Plantae --target-taxon Plantae",
 )
 
 === Migrating schema versions
@@ -493,9 +529,11 @@ the current schema, preserving all data. An additional flag converts a
 flat classification — a list of taxa without explicit parent identifiers —
 into a proper parent/child hierarchy with generated identifiers:
 
-#raw(block: true, lang: "sh",
-"sf update old.sqlite output/updated
-sf update flat.sqlite output/tree --add-parents"
+#raw(
+  block: true,
+  lang: "sh",
+  "sf update old.sqlite output/updated
+sf update flat.sqlite output/tree --add-parents",
 )
 
 `sf` can be installed via Homebrew (`brew install sf`), by downloading a
@@ -524,15 +562,17 @@ registered with a short label. The sources currently included are:
   table(
     columns: (auto, 1fr),
     stroke: 0.5pt,
-    [*Label*],        [*Source*],
-    [`grin`],         [GRIN (Germplasm Resources Information Network) — plant genetic resources],
-    [`ioc`],          [IOC World Bird List — ornithological checklist],
-    [`itis`],         [ITIS (Integrated Taxonomic Information System)],
-    [`ncbi`],         [NCBI Taxonomy],
-    [`paleodb`],      [Paleobiology Database],
-    [`wikisp`],       [Wikispecies],
-    [`worldplants`],  [World Plants],
-  )
+    [*Label*], [*Source*],
+    [`grin`],
+    [GRIN (Germplasm Resources Information Network) — plant genetic resources],
+
+    [`ioc`], [IOC World Bird List — ornithological checklist],
+    [`itis`], [ITIS (Integrated Taxonomic Information System)],
+    [`ncbi`], [NCBI Taxonomy],
+    [`paleodb`], [Paleobiology Database],
+    [`wikisp`], [Wikispecies],
+    [`worldplants`], [World Plants],
+  ),
 ) <harvester-sources>
 
 === Source adapter interface
@@ -550,11 +590,13 @@ are required.
 `harvester list` prints all registered sources with their labels and IDs.
 `harvester get` fetches and converts a source by label or list position:
 
-#raw(block: true, lang: "sh",
-"harvester list                      # show registered sources
+#raw(
+  block: true,
+  lang: "sh",
+  "harvester list                      # show registered sources
 harvester get itis                   # fetch and convert ITIS
 harvester get itis output/itis -z   # compress output as zip
-harvester get ioc  -f local.zip     # use a pre-downloaded file"
+harvester get ioc  -f local.zip     # use a pre-downloaded file",
 )
 
 === Performance
@@ -574,11 +616,13 @@ archives as its sole input.
 `gndb` manages the full lifecycle of the GNverifier PostgreSQL database
 through four subcommands:
 
-#raw(block: true, lang: "sh",
-"gndb create    # create the database schema
+#raw(
+  block: true,
+  lang: "sh",
+  "gndb create    # create the database schema
 gndb migrate   # apply schema migrations
 gndb populate  # load SFGA sources into the database
-gndb optimize  # build indexes for fast verification"
+gndb optimize  # build indexes for fast verification",
 )
 
 === Populating from SFGA sources
@@ -593,9 +637,11 @@ strings and canonical forms, vernacular names, taxonomic hierarchy, and
 finally name-string indices. All five phases use batched inserts for
 performance.
 
-#raw(block: true, lang: "sh",
-"gndb populate                    # load all sources in sources.yaml
-gndb populate --source-ids 1,11  # load specific sources only"
+#raw(
+  block: true,
+  lang: "sh",
+  "gndb populate                    # load all sources in sources.yaml
+gndb populate --source-ids 1,11  # load specific sources only",
 )
 
 === Fit within the broader pipeline
