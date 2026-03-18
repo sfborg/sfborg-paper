@@ -1,4 +1,7 @@
 #import "template/lib.typ": article, author-meta
+#import "sf-figure.typ": sf-figure
+#import "harvester-figure.typ": harvester-figure
+#import "gndb-figure.typ": gndb-figure
 
 #show: article.with(
   title: "SFBorg: a frictionless biodiversity data
@@ -471,6 +474,14 @@ format — and also tells you exactly what changed between two versions of a
 dataset. In addition `sf` package allows to prepare outdated SFGA files by
 updating them to the latest available version.
 
+#figure(
+  placement: none,
+  caption: [Data-flow overview of `sf` subcommands. Blue chips are
+    standard exchange formats; amber chips are SFGA archives; the green
+    node is the `sf` tool itself.],
+  sf-figure,
+) <sf-figure>
+
 === Importing data into SFGA
 
 `sf from` converts a source file into a pair of SFGA outputs: a plain-text
@@ -551,6 +562,14 @@ sources distribute data as bespoke database dumps, proprietary spreadsheets,
 or web-scraped content that `sf` cannot handle generically. `Harvester`
 fills that gap with hand-written adapters for each such source.
 
+#figure(
+  placement: none,
+  caption: [Data-flow overview of `harvester get`. Coloured non-rectangular
+    shapes represent heterogeneous non-standard source datasets; the ellipsis
+    indicates additional sources not shown.],
+  harvester-figure,
+) <harvester-figure>
+
 === Supported sources
 
 Each source is implemented as a Go package under `internal/sources/` and
@@ -610,6 +629,14 @@ service that resolves scientific names against hundreds of biodiversity data
 sources. Running a local GNverifier instance requires loading those sources
 into a PostgreSQL database; `gndb` automates that loading step, taking SFGA
 archives as its sole input.
+
+#figure(
+  placement: none,
+  caption: [Data-flow overview of `gndb populate`. Multiple SFGA archives are
+    loaded into the `gnames` PostgreSQL database; GNverifier queries that
+    database directly (dashed arrow).],
+  gndb-figure,
+) <gndb-figure>
 
 === Database lifecycle
 

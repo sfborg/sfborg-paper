@@ -256,3 +256,4 @@
     table.hline(stroke: top-bottom)
   )
 }
+
