@@ -438,7 +438,7 @@ package:
 #raw(
   block: true,
   lang: "go",
-  "sflib.NewText(opts...)   // plain text
+  "sflib.NewText(opts...)   // plain text: one name per line
 sflib.NewXsv(opts...)    // CSV / TSV / PSV
 sflib.NewColdp(opts...)  // CoLDP
 sflib.NewDwca(opts...)   // DwCA
@@ -476,21 +476,25 @@ updating them to the latest available version.
 
 #figure(
   placement: none,
-  caption: [Data-flow overview of `sf` subcommands. Blue chips are
-    standard exchange formats; amber chips are SFGA archives; the green
-    node is the `sf` tool itself.],
+  caption: [The functionality of `sf` subcommands.
+*(A)* Universal converter allows to import and export various dataset
+formats as SFGA.
+*(B)* Calculation of differences between two SFGA files (currently
+only scientific name strings and authorships are supported).
+*(C)* Schema migration allows to upgrade older backward compatible
+versions of SFGA to the current version.],
   sf-figure,
 ) <sf-figure>
 
 === Importing data into SFGA
 
-`sf from` converts a source file into a pair of SFGA outputs: a plain-text
-SQL dump (`.sql`) and a ready-to-use binary SQLite database (`.sqlite`).
-Supported input formats are Darwin Core Archive (DwCA), Catalogue of Life
-Data Package (CoLDP), delimiter-separated files with DwC or CoLDP headers
-(CSV, TSV, PSV), and plain-text name lists. The format is inferred from
-the file extension and internal structure; the output path prefix is
-provided by the user:
+`sf from` converts a source file into a pair of SFGA outputs: a plain-text SQL
+dump (`.sql`) and a ready-to-use binary SQLite database (`.sqlite`) (@sf-figure
+panel *A*). Supported input formats are Darwin Core Archive (DwCA), Catalogue of
+Life Data Package (CoLDP), delimiter-separated files with DwC or CoLDP headers
+(CSV, TSV, PSV), and plain-text name lists. The format is inferred from the
+file extension and internal structure; the output path prefix is provided by
+the user:
 
 #raw(
   block: true,
@@ -507,7 +511,8 @@ there is also a flag to compress them by ZIP algorithm.
 
 === Exporting from SFGA
 
-`sf to` re-exports an SFGA archive to any of the supported output formats:
+`sf to` exports an SFGA archive to any of the supported output formats
+(@sf-figure panel *A*):
 
 #raw(
   block: true,
@@ -523,7 +528,7 @@ sf to text  dataset.sqlite names     # SFGA → plain text",
 `sf diff` computes a difference between two SFGA files and writes the
 result as a third SFGA archive whose tables record which taxa, names, and
 synonyms were added, modified, or removed. The comparison can optionally
-be scoped to a named taxon in each file:
+be scoped to a named taxon in each file (@sf-figure panel *B*):
 
 #raw(
   block: true,
@@ -533,12 +538,18 @@ sf diff v1.sqlite v2.sqlite diff.sqlite \\
     --source-taxon Plantae --target-taxon Plantae",
 )
 
+Currently `sf diff` is limited to comparing scientific name strings between
+datasets, however it is intelligent enough to be able to normalize canonical
+forms and authorships to achieve accurate comparison of different lexical
+varians of the same name.
+
 === Migrating schema versions
 
 `sf update` migrates an SFGA file produced by an older schema version to
 the current schema, preserving all data. An additional flag converts a
 flat classification — a list of taxa without explicit parent identifiers —
-into a proper parent/child hierarchy with generated identifiers:
+into a proper parent/child hierarchy with generated identifiers (@sf-figure
+panel *C*):
 
 #raw(
   block: true,
@@ -564,9 +575,10 @@ fills that gap with hand-written adapters for each such source.
 
 #figure(
   placement: none,
-  caption: [Data-flow overview of `harvester get`. Coloured non-rectangular
-    shapes represent heterogeneous non-standard source datasets; the ellipsis
-    indicates additional sources not shown.],
+  caption: [The `harvester get` subcommand converts idiosyncratic datasets
+    to SFGA. Colored non-rectangular shapes represent heterogeneous
+    non-standard datasets; the ellipsis indicates additional sources not
+    shown.],
   harvester-figure,
 ) <harvester-figure>
 
@@ -606,8 +618,9 @@ are required.
 
 === CLI usage
 
-`harvester list` prints all registered sources with their labels and IDs.
-`harvester get` fetches and converts a source by label or list position:
+The `harvester list` subcommand prints all registered sources with their labels
+and IDs. The `harvester get` cubcommand fetches and converts a source by label
+or list position (@harvester-figure):
 
 #raw(
   block: true,
@@ -662,7 +675,7 @@ sources. `gndb populate` reads the YAML, downloads or opens each SFGA
 file, and imports data in five ordered phases: dataset metadata, name
 strings and canonical forms, vernacular names, taxonomic hierarchy, and
 finally name-string indices. All five phases use batched inserts for
-performance.
+performance (@gndb-figure).
 
 #raw(
   block: true,

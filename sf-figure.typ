@@ -194,7 +194,7 @@
   #v(10pt)
   #line(length: 100%, stroke: 0.5pt + luma(200))
   #v(8pt)
-  #_section[B) Semantic diff]
+  #_section[B) Calculation of differences]
   #v(5pt)
 
   #align(center, _diff-diag)
