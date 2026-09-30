@@ -3,6 +3,14 @@
 #import "harvester-figure.typ": harvester-figure
 #import "gndb-figure.typ": gndb-figure
 
+#let ver-go = "v1.27"
+#let ver-sfga = "v0.5.1" 
+#let ver-sflib = "v0.6.2"
+#let ver-sf = "v0.3.1"
+#let ver-harv = "v0.2.2"
+#let ver-hive = "v0.0.1"
+#let ver-gndb = "v0.1.4"
+
 #show: article.with(
   title: "SFBorg: a frictionless biodiversity data
   exchange.",
@@ -152,8 +160,8 @@ completing the pipeline at the downstream end. All file tools are built on
 `sflib`, a shared Go library that encapsulates core SFGA functionality and
 prevents duplication of conversion, diff, modification and normalisation logic
 across the ecosystem. The overall data flow is: _ingest_ (`sf`/ `harvester`) →
-_normalise_ to SFGA → _edit_ (`hive`) → _diff_ (`sf`) → _export or load_ (`sf`
-/ `gndb`).
+_normalise_ to SFGA → _edit_ (`hive`) → _diff_ (`sf`) → _export or load_ 
+(`sf` / `gndb`).
 
 SFBorg is in active production use, though the SFGA schema is still maturing
 and may undergo significant revision if limitations are encountered. The
@@ -219,18 +227,18 @@ These directions are under active discussion within the Species File Group.
   table(
     columns: (auto, 1fr),
     stroke: 0.5pt,
-    [*Programming language*], [Go (version TBA)],
+    [*Programming language*], [Go #ver-go],
     [*Archive format*], [SQLite 3],
     [*Interface*], [Command-line interface (all tools); Go library (sflib)],
     [*Standards*], [Darwin Core, Catalogue of Life Data Package],
     [*Operating system*], [Linux, macOS, Windows (cross-platform via Go)],
     [*Licence*], [MIT License],
-    [*SFGA schema version*], [TBA],
-    [*SF version*], [TBA],
-    [*harvester version*], [TBA],
-    [*hive version*], [TBA],
-    [*gndb version*], [TBA],
-    [*sflib version*], [TBA],
+    [*SFGA schema version*], [#ver-sfga],
+    [*SF version*], [#ver-sf],
+    [*harvester version*], [#ver-harv],
+    [*hive version*], [#ver-hive],
+    [*gndb version*], [#ver-gndb],
+    [*sflib version*], [#ver-sflib],
   ),
 ) <specifications>
 
@@ -248,18 +256,18 @@ full license text is available in the `LICENSE` file in each repository.
 
 = Implementation
 
-The SFBorg implementation consists of two layers: the SFGA SQLite schema,
-which defines the exchange format, and a suite of applications — `SFlib`,
-`SF`, `Harvester`, and `GNdb` — that produce, consume, and transform SFGA
+The SFBorg implementation consists of two layers: the SFGA SQLite schema, which
+defines the exchange format, and a suite of applications — `SFlib`, `SF`,
+`Harvester`, `Hive` and `GNdb` — that produce, consume, and transform SFGA
 archives.
 
 == SFGA Format
 
 
 In contrast with traditional checklists that require transfer to a database to
-be useful, an SFGA file _is_ the database — recipients can open it in any SQL
-client, run queries, and modify records the moment they receive it, with no
-import step and no risk of parsing errors.
+be useful, an SFGA file _is_ the database — recipients can open it in a SQLite
+compatible client, run queries, and modify records the moment they receive it,
+with no import step and no risk of parsing errors.
 
 === Schema design
 
@@ -270,25 +278,24 @@ existing standard to a normalised relational design. Every CoLDP field is
 present in SFGA and carries the same semantics, so a round-trip conversion
 between the two formats is lossless for CoLDP-conformant data. The schema
 extends CoLDP with fields required for lossless migration among the two SFG
-projects: the Catalogue of Life, and Global Names.TaxonWorks, which models taxa
-through rich ontologies, will require additional changes to the schema.
-The schema update to cover Dawrin Core Data Package standard is planned for
-a near future.
+projects: the Catalogue of Life, and Global Names. TaxonWorks, which models
+taxa through rich ontologies, will require additional changes to the schema.
+The schema update to cover DwC-DP standard is planned for a near future.
 
-SFGA follows semantic versioning. The current release is v0.4.2. The leading
+SFGA follows semantic versioning. The current release is #ver-sfga. The leading
 zero signals that the schema is still maturing: any minor-version increment
-(e.g. v0.4 → v0.5) may introduce breaking changes. Once the schema has
+(e.g. v0.5 → v0.6) may introduce breaking changes. Once the schema has
 stabilised across all production workflows it will be released as v1.0.0,
 after which backward compatibility will be maintained.
 
 === Data tables
 
-Version v0.4.2 contains the following data tables (controlled-vocabulary
+SFGA #ver-sfga contains the following data tables (controlled-vocabulary
 tables are listed separately below):
 
 #figure(
   placement: none,
-  caption: [SFGA data tables in v0.4.2.],
+  caption: [SFGA data tables in #ver-sfga],
   table(
     columns: (auto, 1fr),
     stroke: 0.5pt,
@@ -316,7 +323,7 @@ tables are listed separately below):
     [`taxon_property`], [Arbitrary key–value properties for taxa],
     [`species_interaction`], [Ecological interactions between taxa],
     [`taxon_concept_relation`],
-    [Set-theoretic relationships between taxon concepts],
+    [Sets-theoretic relationships between taxon concepts],
 
     [`name_match`], [Pre-computed name-matching results],
   ),
@@ -348,7 +355,7 @@ the rest. The four current namespaces are:
 
 Terms for the `gn__`, `sf__`, and `tw__` namespaces are defined at
 `https://terms.sfg.org` (under active development). `col__` terms follow the
-published CoLDP specification @coldp.
+published CoLDP specification @coldp. TODO: talk to Matt about term's url
 
 === Controlled vocabularies
 
@@ -396,13 +403,13 @@ fix or schema change propagates to all tools at once.
 
 === Package structure
 
-`sflib` is a pure-Go library @mozzherin_ower_2026_sflib that
-requires no CGO and no system-level SQLite installation; all SQLite access
-goes through the `modernc.org/sqlite` pure-Go driver. It means that applicatons
-developed on the base of `sflib` are self-sufficient and do not require
-SQLite to be present. The library is
-organised around five format packages, each providing the same
-`arch.Packager` interface:
+`sflib` is a pure-Go library @mozzherin_ower_2026_sflib that requires no CGO
+and no system-level SQLite installation; all SQLite access goes through the
+`modernc.org/sqlite` pure-Go driver. It means that applicatons developed on the
+base of `sflib` are self-sufficient and do not require SQLite to be present.
+Another important dependency is `ariga/atlas` which provides the declarative
+schema migration. The library is organised around five format packages, each
+providing the same `arch.Packager` interface:
 
 #figure(
   placement: none,
@@ -465,6 +472,32 @@ from flat classificatios), and `OptLocalSchemaPath` (tells to use a local
 Record data flows between packages through the `coldp.NameUsage` and
 `coldp.Data` types defined in `pkg/coldp`, which serve as the canonical
 in-memory representation regardless of the source or target format.
+
+=== Schema Migration
+
+One significant difference between getting information from CSV file using a
+controlled vocabulary terms and querying data from the database is that
+SQL query must contain only columns that exist in the corresponding tables.
+It means that SFLIB can only use a compatible version of SFGA.
+
+To solve this problem we added an automatic migration of the SFGA to the
+desired version. It is achieved by using Atlas @atlas library. The resultng
+migration is declarative. SFLIB reads SFGA file, determines the difference of
+its schema in comparison with required schema and creates SQL queries that
+synchronise any compatible version of SFGA schema with current one.
+
+SFLIB's Fetch() function checks the schema version of an incoming SFGA file and
+automatically adjusts it to the current version. As a result every program that
+uses Fetch() runs the migration in the background.
+
+Declarative migration works great most of the time. However if the schema
+underwent dramatical changes there might be not enough information to calculate
+the difference between schemas. If such cases arise while we are approaching
+the stable v1.0.0 of the schema, we will add older SFGA schema as yet another
+import format.
+
+We introduced automatic migration in SFGA v0.5.1. Thus this version is the
+oldest supported by the migration feature.
 
 === Usage
 
