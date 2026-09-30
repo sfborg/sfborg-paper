@@ -14,26 +14,28 @@
 
   abstract: [ *Background:* Sharing biodiversity datasets across projects and
   organisations depends on common exchange formats e.g., Darwin Core Archive
-  (DwCA) or the Catalogue of Life Data Package (ColDP). These formats bundle
-  multiple CSV, JSON, or XML files into a single compressed archive. While
-  widely adopted, this approach has a fundamental limitation: the data is
-  effectively inert until a recipient imports it into a database. Generatation
-  of a dataset's archive is error-prone and introduced inconsistencies might
-  create significant problems on the receiving end. Also, there is no standard
-  mechanism to detect what has changed between two successive releases of the
-  same dataset.
+  (DwCA), Darwin Core Data Package (DwC-DP) or the Catalogue of Life Data
+  Package (ColDP). These formats bundle multiple CSV, JSON, or XML files into a
+  single compressed archive. While widely adopted, this approach has a
+  fundamental limitation: the data is effectively inert until a recipient
+  imports it into a database. Generatation of a dataset's archive is
+  error-prone and introduced inconsistencies might create significant problems
+  on the receiving end. Also, there is no standard mechanism to detect what has
+  changed between two successive releases of the same dataset.
 
     *New information:* We introduce SFBorg, a SQLite-based ecosystem for
-  biodiversity datasets exchange centred on the Species File Group Archive
-  (SFGA) schema. An SFGA single file is a self-contained SQLite database,
-  allowing recipients to query and modify data immediately using standard SQL
-  tools — no import step required. The ecosystem includes: `sf`, a universal
-  converter between DwCA, ColDP, and other formats, which also computes data
-  diffs between two SFGA archives to identify added, modified, or removed taxa,
-  names, and synonyms; `harvester`, for ingesting non-standard or legacy
-  sources; and `gndb`, which loads SFGA archives directly into the GNverifier
-  PostgreSQL database. Shared functionality is centralised in the `sflib`
-  library, reducing duplication and lowering the cost of adding new tools.
+  biodiversity datasets development and exchange centred on the Species File
+  Group Archive (SFGA) schema. An SFGA single file is a self-contained SQLite
+  database, allowing recipients to query and modify data immediately using
+  standard SQL tools — no import step required. The ecosystem currently
+  includes: `sf`, a universal converter between DwCA, ColDP, and other formats,
+  which also computes data diffs between two SFGA archives to identify added,
+  modified, or removed taxa, names, and synonyms; `harvester`, for ingesting
+  non-standard or legacy sources; `hive` an editor and viewer of an SFGA data;
+  and `gndb`, which loads SFGA archives directly into the GNverifier PostgreSQL
+  database. Shared functionality is centralised in the `sflib` library,
+  reducing duplication and lowering the cost of adding new tools. An automatic
+  migration from older versions of SFGA schema is also accomodated via `sflib`.
   SFBorg is currently in production use across Species File Group projects. All
   code is open source and available on GitHub under the MIT licence. #v(1em) ],
   keywords: (
@@ -43,6 +45,7 @@
     "data format",
     "taxonomic data",
     "data conversion",
+    "data manipulation",
   ),
 )
 //#set cite(style: "pensoft") #show link: underline
@@ -134,7 +137,7 @@ answer to the limitations of inert archive formats: recipients can inspect,
 filter, and transform a dataset the moment they receive it, without any
 import pipeline.
 
-The ecosystem around SFGA currently consists of four applications. The `sf`
+The ecosystem around SFGA currently consists of five applications. The `sf`
 tool is a universal converter: it reads biodiversity data from DwCA, CoLDP, CSV
 files where fields are names according to DwCA or CoLDP terms, or simply from
 lists of scientific names, normalises them into SFGA, and can re-export SFGA
@@ -142,13 +145,15 @@ files as all these formats. `sf` also computes semantic diffs between two SFGA
 versions of data, identifying added, modified, and removed taxa, names, and
 synonyms. The `harvester` tool handles sources that cannot be processed
 generically by `sf` — non-standard or legacy datasets that require bespoke
-parsing and normalisation logic. The `gndb` tool loads an SFGA archive directly
-into the PostgreSQL database schema used by GNverifier, completing the pipeline
-at the downstream end. All four tools are built on `sflib`, a shared Go library
-that encapsulates core SFGA functionality and prevents duplication of
-conversion, diff, and normalisation logic across the ecosystem. The overall
-data flow is: _ingest_ (sf / harvester) → _normalise_ to SFGA → _diff_ (sf) →
-_export or load_ (sf / gndb).
+parsing and normalisation logic. The `hive` application provides meanings to
+view and modify data presented as an SFGA archive. The `gndb` tool loads an
+SFGA archive directly into the PostgreSQL database schema used by GNverifier,
+completing the pipeline at the downstream end. All file tools are built on
+`sflib`, a shared Go library that encapsulates core SFGA functionality and
+prevents duplication of conversion, diff, modification and normalisation logic
+across the ecosystem. The overall data flow is: _ingest_ (`sf`/ `harvester`) →
+_normalise_ to SFGA → _edit_ (`hive`) → _diff_ (`sf`) → _export or load_ (`sf`
+/ `gndb`).
 
 SFBorg is in active production use, though the SFGA schema is still maturing
 and may undergo significant revision if limitations are encountered. The
@@ -167,24 +172,24 @@ SFBorg was created by the Species File Group (SFG) at the Illinois Natural
 History Survey, University of Illinois at Urbana-Champaign, to serve the
 data-exchange needs of its three main projects: TaxonWorks, Catalogue of Life,
 and Global Names. All components of the ecosystem are released under the MIT
-licence and hosted on GitHub; contributions from the broader
-community are welcome.
+licence and hosted on GitHub. We do hope the system will be useful for a
+broader community.
 
-Looking ahead, the SFBorg team sees SFGA not merely as a pipeline format but
-as a stable platform for a broader class of tools — analogous to the role that
-stable document formats play in enabling diverse editors, viewers, and
-collaboration workflows. A normalised, SQL-queryable schema for biodiversity
-data could support a universal taxonomic editor, where any SFGA-aware
-application can open any checklist file without server setup; a web-based
-viewer that makes a taxonomist's life work publicly accessible the moment data
-are converted; diff-based peer review, where reviewers annotate semantic
-changes between two SFGA versions much as tracked changes work in a word
-processor; offline field tools that carry a working checklist on a tablet and
-synchronise changes back via the existing diff mechanism; direct data
-publication as citable packages on repositories such as Zenodo or Dryad; and
-AI-assisted workflows, where the SQL interface allows natural-language queries
-over a checklist without custom integration. These directions are under active
-discussion within the Species File Group.
+Looking ahead, the SFBorg team sees SFGA not merely as a pipeline format but as
+a stable platform for a broader class of tools — analogous to the role that
+stable document/spreadsheet formats play in enabling diverse editors, viewers,
+and collaboration workflows. A normalised, SQL-queryable schema for
+biodiversity data could support a universal taxonomic editor (`hive` is a
+prototype), where any SFGA-aware application can open any checklist file
+without server setup; a web-based viewer that makes a taxonomist's life work
+publicly accessible the moment data are converted; diff-based peer review,
+where reviewers annotate semantic changes between two SFGA versions much as
+tracked changes work in a word processor; offline field tools that carry a
+working checklist on a tablet and synchronise changes back via the existing
+diff mechanism; direct data publication as citable packages on repositories
+such as Zenodo or Dryad; and AI-assisted workflows, where the SQL interface
+allows natural-language queries over a checklist without custom integration.
+These directions are under active discussion within the Species File Group.
 
 
 = Web Location (URIs)
@@ -200,6 +205,7 @@ discussion within the Species File Group.
     [*SFlib*], [https://github.com/sfborg/sflib],
     [*SF (converter)*], [https://github.com/sfborg/sf],
     [*Harvester*], [https://github.com/sfborg/harvester],
+    [*Hive*], [https://github.com/sfborg/hive],
     [*GNdb*], [https://github.com/sfborg/gndb],
   ),
 ) <web-locations>
@@ -209,7 +215,7 @@ discussion within the Species File Group.
 
 #figure(
   placement: none,
-  caption: [SFBorg project specifications],
+  caption: [SFBorg project specifications at the moment of publication],
   table(
     columns: (auto, 1fr),
     stroke: 0.5pt,
@@ -222,6 +228,7 @@ discussion within the Species File Group.
     [*SFGA schema version*], [TBA],
     [*SF version*], [TBA],
     [*harvester version*], [TBA],
+    [*hive version*], [TBA],
     [*gndb version*], [TBA],
     [*sflib version*], [TBA],
   ),
@@ -265,6 +272,8 @@ between the two formats is lossless for CoLDP-conformant data. The schema
 extends CoLDP with fields required for lossless migration among the two SFG
 projects: the Catalogue of Life, and Global Names.TaxonWorks, which models taxa
 through rich ontologies, will require additional changes to the schema.
+The schema update to cover Dawrin Core Data Package standard is planned for
+a near future.
 
 SFGA follows semantic versioning. The current release is v0.4.2. The leading
 zero signals that the schema is still maturing: any minor-version increment
