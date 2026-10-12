@@ -286,7 +286,8 @@ SFGA follows semantic versioning. The current release is #ver-sfga. The leading
 zero signals that the schema is still maturing: any minor-version increment
 (e.g. v0.5 → v0.6) may introduce breaking changes. Once the schema has
 stabilised across all production workflows it will be released as v1.0.0,
-after which backward compatibility will be maintained.
+after which backward compatibility will be maintained. The schema is updated
+by adding required changes to the `schama.sql` file.
 
 === Data tables
 
@@ -565,6 +566,9 @@ sf to xsv   dataset.sqlite output    # SFGA → CSV
 sf to text  dataset.sqlite names     # SFGA → plain text",
 )
 
+Export automatically converts incomping older SFGA formats to the current
+version to make it compatible with up-to-date `sflib` code.
+
 === Comparing datasets
 
 `sf diff` computes a difference between two SFGA files and writes the
@@ -627,7 +631,8 @@ fills that gap with hand-written adapters for each such source.
 === Supported sources
 
 Each source is implemented as a Go package under `internal/sources/` and
-registered with a short label. The sources currently included are:
+registered with a short label. The are 23 sources currently included, for
+example:
 
 #figure(
   placement: none,
@@ -650,13 +655,14 @@ registered with a short label. The sources currently included are:
 
 === Source adapter interface
 
-Every adapter implements the `data.Convertor` interface and is registered
-via a `data.DataSet` descriptor that carries a short label, a human-readable
-name, usage notes, a download URL, and a `ManualSteps` flag for sources
-whose conversion cannot be fully automated (the `Notes` field must then
-document the manual steps). New sources are added by implementing the
-interface and registering the descriptor; no changes to the core pipeline
-are required.
+Every adapter implements the `data.Convertor` interface and is registered via a
+`data.DataSet` descriptor that carries a short label, a human-readable name,
+usage notes, a download URL, and a `ManualSteps` flag for sources whose
+conversion cannot be fully automated (the `Notes` field must then document the
+manual steps). New sources are added by implementing the interface and
+registering the descriptor; no changes to the core pipeline are required. All
+datasets from ChecklistBank can be imported by their adapter, while some of
+them have their own adapters for convenience.
 
 === CLI usage
 
@@ -788,6 +794,12 @@ existing consumers — they simply encounter an extra column they do not
 recognise and continue working. A new column in the SFGA schema, by
 contrast, is a structural change: SQL queries that reference specific
 columns or rely on schema introspection may fail against a newer file.
+
+We solve this problem by introducing a tranparent for the user automatic
+schema migraton on SFGA import event. This functionality is part of the
+Fetch() function of SFLIB library. This migration mechanism is introduced
+in SFGA v 0.5.1; it supports all subsequent versioins.
+
 Before v1.0.0 this tension is managed by semantic versioning with explicit
 breaking-change declarations; every SFGA file carries a `version` table
 that records the schema version it was produced with, and `sf update`
