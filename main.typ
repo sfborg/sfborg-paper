@@ -409,8 +409,10 @@ and no system-level SQLite installation; all SQLite access goes through the
 `modernc.org/sqlite` pure-Go driver. It means that applicatons developed on the
 base of `sflib` are self-sufficient and do not require SQLite to be present.
 Another important dependency is `ariga/atlas` which provides the declarative
-schema migration. The library is organised around five format packages, each
-providing the same `arch.Packager` interface:
+schema migration. Dealing with migration consequences in SFlib significantly
+simplifies maintanence of downstream projects that depend on the library. SFlib
+is organised around five format packages, each providing the same
+`arch.Packager` interface:
 
 #figure(
   placement: none,
@@ -610,7 +612,9 @@ pre-built binary from the GitHub releases page, or with
 
 === Performance
 
-// TODO: an example of converting CoL's CoLDP to SFGA
+convering Catalogue of Life XR edition with 8.5 million names and 5.2 million
+taxa from ColDP to SFGA takes 13.5 minutes on a computer with 
+Intel i9-12900KF 24 cores processor.
 
 == Harvester
 
@@ -681,7 +685,13 @@ harvester get ioc  -f local.zip     # use a pre-downloaded file",
 
 === Performance
 
-// TODO: an example of converting a fairly large dataset like ITIS.
+Converting SQLite archive of Integrated Taxonomic Information System with
+1 million namas and 700 thousand taxa takes 4 minutes on a computer with
+Intel i9-12900KF 24 cores processor.
+
+== hive
+
+// TODO add hive description
 
 == gndb
 
@@ -744,11 +754,13 @@ GNverifier — all without reprocessing the original source data.
 
 === Performance
 
-// TODO: an example of ingesting CoL data.
+Importing SFGA archive of Catalogue of Life XR edition with 8.5 million names
+and 5.2 million taxa to GNverifier PostgreSQL database takes 24 minutes on a
+computer with Intel i9-12900KF 24 cores processor and 64 GB of memory.
 
 == Conclusions
 
-The four components described above form a coherent system unified by a
+The five components described above form a coherent system unified by a
 single design decision: SFGA, a SQLite database, serves simultaneously as
 the exchange unit, the live queryable dataset, and the stable contract
 between tools. Every claim made in the Introduction and Project Description
@@ -818,28 +830,27 @@ an archive, a live database, a diff target, and a direct backend for
 production applications — roles that conventional text-bundle formats
 require separate tooling to fulfil, if they can fulfil them at all.
 
-*SFGA as a platform.* `gndb` represents a qualitative step beyond the
-other tools in the ecosystem: where `sf` and `harvester` treat SFGA as
-an exchange format to produce or consume, `gndb` uses it as the stable
-contract on which a production application is built. It does not parse
-SFGA and discard it; it reads SFGA directly into a live service, with the
-schema defining the interface between data producers and data consumers.
-This is only the beginning of what that role makes possible. Any team
-that needs a queryable, citable, diff-aware biodiversity checklist can
-adopt SFGA as their database backend without building format parsers or
-import pipelines. A universal taxonomic editor could open any SFGA file
-the way a word processor opens a document. A web-based viewer could make
-a taxonomist's life work publicly accessible the moment the data are
-converted. Diff-based peer review could let reviewers annotate semantic
-changes between two SFGA versions as naturally as tracked changes work in
-a manuscript. Offline field tools could carry a working checklist on a
-tablet and synchronise edits back through the existing diff mechanism.
-The SQL interface also makes SFGA-backed checklists immediately accessible
-to AI-assisted workflows without custom integration. Each of these
-directions is a straightforward extension of what the current ecosystem
-already does. The SFGA schema, once stable, is not merely an exchange
-format but a foundation — and the tools described in this paper are the
-first layer built on it.
+*SFGA as a platform.* `hive` and`gndb` represent a qualitative step beyond the
+other tools in the ecosystem: where `sf` and `harvester` treat SFGA as an
+exchange format to produce or consume, `hive` and `gndb` use it as the stable
+contract on which a production application is built. They do not parse SFGA and
+discard it; they read SFGA directly into a live service, with the schema
+defining the interface between data producers and data consumers. This is only
+the beginning of what that role makes possible. Any team that needs a
+queryable, citable, diff-aware biodiversity checklist can adopt SFGA as their
+database backend without building format parsers or import pipelines. A
+universal taxonomic editor like `hive` could open any SFGA file the way a word
+processor opens a document. A web-based viewer could make a taxonomist's life
+work publicly accessible the moment the data are converted. Diff-based peer
+review could let reviewers annotate semantic changes between two SFGA versions
+as naturally as tracked changes work in a manuscript. Offline field tools could
+carry a working checklist on a tablet and synchronise edits back through the
+existing diff mechanism. The SQL interface also makes SFGA-backed checklists
+immediately accessible to AI-assisted workflows without custom integration.
+Each of these directions is a straightforward extension of what the current
+ecosystem already does. The SFGA schema, once stable, is not merely an exchange
+format but a foundation — and the tools described in this paper are the first
+layer built on it.
 
 = Additional Information
 
